@@ -1,8 +1,14 @@
+@description('Server name for the virtual machine.')
+@maxLength(15)
 param serverName string
 
+@description('Region for the resource.')
 param location string
 
+@description('Name of the virtual network to associate with.')
 param vnetName string
+
+@description('Subnet name with the specified virtual network to attach to.')
 param subnetName string = 'default'
 
 var publicIpAddressName = '${serverName}-public-ip'
