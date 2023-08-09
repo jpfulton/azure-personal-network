@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+CURRENT_SCRIPT_DIR="$(dirname "$0")/";
+echo "Running ${0} from ${CURRENT_SCRIPT_DIR}";
+echo;
+
+# Import library functions
+source ${CURRENT_SCRIPT_DIR}lib/azure-cli-functions.sh
+
 print-usage () {
   echo "This script requires two parameters:";
   echo "  - resource group name";
@@ -18,30 +25,10 @@ parse-script-inputs () {
   fi
 }
 
-validate-az-cli-install () {
-  which az > /dev/null;
-  if [ "$?" -ne 0 ]
-    then
-      echo "Azure CLI not found. Please install the Azure CLI. Exiting...";
-      exit 1;
-  fi
-}
-
-check-signed-in-user () {
-  echo "Checking for current Azure User:";
-  az ad signed-in-user show;
-  if [ $? -ne 0 ]
-    then
-      echo "Azure Login required... Run 'az login'.";
-      exit 1;
-  fi
-  echo;
-}
-
 delete-vm () {
   echo "Deleting virtual machine...";
 
-  az vm delete \
+  az vm delete --yes \
     --resource-group $RESOURCE_GROUP \
     --name $SERVER_NAME;
 
@@ -67,6 +54,10 @@ main () {
   check-signed-in-user;
   delete-vm;
   delete-nsg;
+
+  echo "---";
+  echo "Done.";
+  echo;
 }
 
-main $@;
+time main $@;
