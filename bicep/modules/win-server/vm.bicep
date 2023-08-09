@@ -2,7 +2,16 @@
 @maxLength(15)
 param serverName string
 
-@description('Region for the resource.')
+@description('Region for the resources. Allowed values include US regions.')
+@allowed([
+  'centralus'
+  'eastus'
+  'eastus2'
+  'eastus3'
+  'northcentralus'
+  'southcentralus'
+  'westcentralus'
+])
 param location string
 
 @description('Admin account user name.')
