@@ -1,13 +1,31 @@
+@description('Server name for the virtual machine.')
+@maxLength(15)
 param serverName string
 
+@description('Region for the resource.')
 param location string
 
+@description('Admin account user name.')
 param adminUsername string
 
 @secure()
+@description('Password for the admin account.')
 param adminPassword string
 
+@description('Resource Id of the NIC to associate with the virtual machine.')
 param nicId string
+
+@description('Size for the virtual machine. Allowed SKUs support nested virtualization for the WSL.')
+@allowed([
+  'Standard_D2s_v3'
+  'Standard_D4s_v3'
+  'Standard_D8s_v3'
+  'Standard_D16s_v3'
+  'Standard_D32s_v3'
+  'Standard_D48s_v3'
+  'Standard_D64s_v3'
+])
+param vmSize string = 'Standard_D2s_v3'
 
 resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   name: serverName
@@ -17,7 +35,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   }
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_D2s_v3'
+      vmSize: vmSize
     }
     storageProfile: {
       imageReference: {
