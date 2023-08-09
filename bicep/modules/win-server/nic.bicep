@@ -50,6 +50,9 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-03-01' = {
         }
       }
     ]
+    networkSecurityGroup: {
+      id: nsg.id
+    }
   }
 }
 
