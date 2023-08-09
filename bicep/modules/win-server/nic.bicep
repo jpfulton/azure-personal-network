@@ -43,6 +43,9 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-03-01' = {
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {
             id: publicIp.id
+            properties: {
+              deleteOption: 'Delete'
+            }
           }
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, subnetName)
