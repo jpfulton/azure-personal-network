@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+CURRENT_SCRIPT_DIR="$(dirname "$0")/";
+echo "Running ${0} from ${CURRENT_SCRIPT_DIR}";
+echo;
+
+# Import library functions
+source ${CURRENT_SCRIPT_DIR}lib/azure-cli-functions.sh;
+source ${CURRENT_SCRIPT_DIR}lib/powershell-exec-functions.sh;
+
 print-usage () {
   echo "This script requires two parameters:";
   echo "  - resource group name";
@@ -18,26 +26,6 @@ parse-script-inputs () {
   fi
 }
 
-validate-az-cli-install () {
-  which az > /dev/null;
-  if [ "$?" -ne 0 ]
-    then
-      echo "Azure CLI not found. Please install the Azure CLI. Exiting...";
-      exit 1;
-  fi
-}
-
-check-signed-in-user () {
-  echo "Checking for current Azure User:";
-  az ad signed-in-user show;
-  if [ $? -ne 0 ]
-    then
-      echo "Azure Login required... Run 'az login'.";
-      exit 1;
-  fi
-  echo;
-}
-
 deploy () {
   echo "Launching deployment...";
 
@@ -46,20 +34,6 @@ deploy () {
     --resource-group $RESOURCE_GROUP \
     --template-file $TEMPLATE_FILE \
     --parameters serverName=$SERVER_NAME;
-
-  echo "---";
-  echo;
-}
-
-run-ps-disable-nla () {
-  echo "Disabling NLA for RDP...";
-
-  local PS_FILE="../powershell/disable-nla.ps1";
-  az vm run-command invoke \
-    --command-id RunPowerShellScript \
-    --name $SERVER_NAME \
-    -g $RESOURCE_GROUP \
-    --scripts @${PS_FILE};
 
   if [ $? -ne 0 ]
     then
@@ -71,18 +45,32 @@ run-ps-disable-nla () {
   echo;
 }
 
+run-ps-disable-nla () {
+  echo "Disabling NLA for RDP...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/disable-nla.ps1";
+  run-ps $RESOURCE_GROUP $SERVER_NAME $PS_FILE;
+}
+
 run-ps-install-ssh () {
   echo "Installing SSH...";
 
-  local PS_FILE="../powershell/install-ssh.ps1";
-  az vm run-command invoke \
-    --command-id RunPowerShellScript \
-    --name $SERVER_NAME \
-    -g $RESOURCE_GROUP \
-    --scripts @${PS_FILE};
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/install-ssh.ps1";
+  run-ps $RESOURCE_GROUP $SERVER_NAME $PS_FILE;
+}
 
-  echo "---";
-  echo;
+run-ps-install-vmp () {
+  echo "Enabling Virtual Machine Platfrom OS Feature...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/enable-virtual-machine-platform.ps1";
+  run-ps $RESOURCE_GROUP $SERVER_NAME $PS_FILE;
+}
+
+run-ps-install-wsl () {
+  echo "Installing WSL...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/install-wsl.ps1";
+  run-ps $RESOURCE_GROUP $SERVER_NAME $PS_FILE;
 }
 
 restart-vm () {
@@ -103,6 +91,10 @@ main () {
   deploy;
   run-ps-install-ssh;
   run-ps-disable-nla;
+  run-ps-install-vmp;
+  restart-vm;
+
+  run-ps-install-wsl;
   restart-vm;
 
   echo "---";
@@ -110,4 +102,4 @@ main () {
   echo;
 }
 
-main $@;
+time main $@;
