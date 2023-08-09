@@ -17,7 +17,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   }
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_D2as_v4'
+      vmSize: 'Standard_D2s_v3'
     }
     storageProfile: {
       imageReference: {
@@ -58,12 +58,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-03-01' = {
       allowExtensionOperations: true
     }
     securityProfile: {
-      uefiSettings: {
-        secureBootEnabled: true
-        vTpmEnabled: true
-      }
       encryptionAtHost: true
-      securityType: 'TrustedLaunch'
     }
     networkProfile: {
       networkInterfaces: [
