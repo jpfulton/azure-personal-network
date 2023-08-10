@@ -32,7 +32,7 @@ resize-vm () {
 
   az vm resize \
     --resource-group $RESOURCE_GROUP \
-    --name $NSG_NAME \
+    --name $SERVER_NAME \
     --size $VM_SIZE;
 
   echo "---";
