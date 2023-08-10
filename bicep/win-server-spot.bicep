@@ -12,7 +12,7 @@ param serverName string
   'Standard_D48s_v3'
   'Standard_D64s_v3'
 ])
-param vmSize string = 'Standard_D2s_v3'
+param vmSize string = 'Standard_D4s_v3'
 
 @description(
 '''Region for the virtual machine and associated resources.
