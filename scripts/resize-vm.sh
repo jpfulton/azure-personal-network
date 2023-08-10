@@ -15,7 +15,7 @@ print-usage () {
 parse-script-inputs () {
   if [ "$#" -ne 3 ]
     then
-      print-usage;
+      print-usage $@;
       exit 1;
     else
       RESOURCE_GROUP="$1";
