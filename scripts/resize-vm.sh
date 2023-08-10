@@ -8,10 +8,7 @@ echo;
 source ${CURRENT_SCRIPT_DIR}lib/azure-cli-functions.sh
 
 print-usage () {
-  echo "This script requires three parameters:";
-  echo "  - resource group name";
-  echo "  - server name";
-  echo "  - size";
+  echo "Usage: ${0} [resource-group] [server-name] [vm-size]";
   echo;
 }
 
