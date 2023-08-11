@@ -48,12 +48,24 @@ delete-nsg () {
   echo;
 }
 
+remove-keys-from-known-hosts () {
+  echo "Removing public keys from local known hosts file for deleted server...";
+
+  # Remove lines starting with servername from known hosts file
+  FILE_CONTENTS=$(grep -v --line-buffered "^${SERVER_NAME}" ~/.ssh/known_hosts);
+  echo $FILE_CONTENTS > ~/.ssh/known_hosts
+
+  echo "---";
+  echo;
+}
+
 main () {
   parse-script-inputs $@;
   validate-az-cli-install;
   check-signed-in-user;
   delete-vm;
   delete-nsg;
+  remove-keys-from-known-hosts;
 
   echo "---";
   echo "Done.";
