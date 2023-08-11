@@ -16,12 +16,12 @@ This project has dependencies upon Powershell and the Azure CLI.
 
 Install [Homebrew](https://brew.sh):
 
-`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+```/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"```
 
 Install the Azure CLI:
 
-`brew update && brew install azure-cli`
+```brew update && brew install azure-cli```
 
 Install PowerShell:
 
-`brew update && brew install --cask powershell`
+```brew update && brew install --cask powershell```
