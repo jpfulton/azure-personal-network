@@ -17,8 +17,8 @@ $env:WSLENV += ":DEBIAN_FRONTEND"
 
 # update Ubuntu base packages
 Write-Host "Updating distribution packages..."
-Write-Host (& wsl -u root sh -c 'apt-get update && apt-get full-upgrade -y && apt-get autoremove -y && apt-get autoclean && exit')
-Write-Host (& wsl --shutdown)  # instead of 'reboot'
+Write-Host (wsl -u root sh -c 'apt-get update && apt-get full-upgrade -y')
+Write-Host (wsl --shutdown)  # instead of 'reboot'
 
 Write-Host "Bringing the distribution back up with updates installed..."
-Write-Host (& wsl -u root sleep 5) # bring the distro back up with updates installed
+Write-Host (wsl -u root sleep 5) # bring the distro back up with updates installed
