@@ -121,9 +121,9 @@ get-user-inputs () {
   read -p "Enter an admin account username [jpfulton]: " ADMIN_USERNAME;
   ADMIN_USERNAME=${ADMIN_USERNAME:-jpfulton};
 
-  read -s -p "Enter an admin account password: " ADMIN_PASSWORD;
+  read -s -p "Enter an admin account password: " SCRIPT_LOCAL_ADMIN_PASSWORD;
 
-  if [ "$ADMIN_PASSWORD" = "" ]
+  if [ "$SCRIPT_LOCAL_ADMIN_PASSWORD" = "" ]
   then
     echo;
     echo "Admin account password cannot be empty. Exiting...";
@@ -148,11 +148,22 @@ get-user-inputs () {
 deploy () {
   echo "Launching deployment...";
 
-  local TEMPLATE_FILE="../bicep/win-server-spot.bicep";
+  export SERVER_NAME="$SERVER_NAME";
+  export ADMIN_USERNAME="$ADMIN_USERNAME";
+
+  # export admin pass to evironment variable for use in script
+  # using an environment variable keeps the password off the command line
+  # which can be potentially seen in ps queries by other system users
+  export ADMIN_PASSWORD="$SCRIPT_LOCAL_ADMIN_PASSWORD";
+
+  local TEMPLATE_FILE="${CURRENT_SCRIPT_DIR}../bicep/win-server-spot.bicep";
+  local PARAM_FILE="${CURRENT_SCRIPT_DIR}../bicep/win-server-spot.bicepparam";
   az deployment group create \
     --resource-group $RESOURCE_GROUP \
     --template-file $TEMPLATE_FILE \
-    --parameters serverName=$SERVER_NAME adminUsername=$ADMIN_USERNAME adminPassword=$ADMIN_PASSWORD;
+    --parameters $PARAM_FILE;
+
+  export ADMIN_PASSWORD=""; # reset the evironment variable after use
 
   if [ $? -ne 0 ]
     then
@@ -187,7 +198,7 @@ run-ps-copy-local-public-key () {
   # export admin pass to evironment variable for use in script
   # using an environment variable keeps the password off the command line
   # which can be potentially seen in ps queries by other system users
-  export ADMIN_PASSWORD="$ADMIN_PASSWORD";
+  export ADMIN_PASSWORD="$SCRIPT_LOCAL_ADMIN_PASSWORD";
   run-local-ps $PS_FILE "$ARGS";
   export ADMIN_PASSWORD=""; #reset the environment variable after use
 }
