@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# Currently hard coded constants
-ADMIN_USERNAME="jpfulton";
-PRIVATE_DNS_ZONE="private.jpatrickfulton.com";
-
 CURRENT_SCRIPT_DIR="$(dirname "$0")/";
 echo "Running ${0} from ${CURRENT_SCRIPT_DIR}";
 echo "---";
@@ -12,6 +8,7 @@ echo;
 # Import library functions
 source ${CURRENT_SCRIPT_DIR}lib/azure-cli-functions.sh;
 source ${CURRENT_SCRIPT_DIR}lib/powershell-exec-functions.sh;
+source ${CURRENT_SCRIPT_DIR}lib/sshpass-functions.sh;
 
 # Set remote execution PS script
 REMOTE_EXECUTION_PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/run-file-on-remote-server.ps1";
@@ -106,16 +103,41 @@ parse-script-inputs () {
   fi
 
   SERVER_NAME="$2";
-  SERVER_FQDN="${SERVER_NAME}.${PRIVATE_DNS_ZONE}";
   if [ "$SERVER_NAME" == "" ]
     then
       print-usage;
       exit 1;
   fi
 
+  echo "---";
+  echo;
+}
+
+get-user-inputs () {
+  read -p "Enter a private DNS zone name [private.jpatrickfulton.com]: " PRIVATE_DNS_ZONE;
+  PRIVATE_DNS_ZONE=${PRIVATE_DNS_ZONE:-private.jpatrickfulton.com};
+
+  read -p "Enter an admin account username [jpfulton]: " ADMIN_USERNAME;
+  ADMIN_USERNAME=${ADMIN_USERNAME:-jpfulton};
+
+  read -s -p "Enter an admin account password: " ADMIN_PASSWORD;
+
+  if [ "$ADMIN_PASSWORD" = "" ]
+  then
+    echo;
+    echo "Admin account password cannot be empty. Exiting...";
+    exit 1;
+  fi
+
+  SERVER_FQDN="${SERVER_NAME}.${PRIVATE_DNS_ZONE}";
+
+  echo;
+  echo;
+  echo "---";
   echo "Using resource group: $RESOURCE_GROUP";
   echo "Using server name: $SERVER_NAME";
-  echo "Using full server private DNS: $SERVER_FQDN";
+  echo "Using full server private DNS name: $SERVER_FQDN";
+  echo "Using admin account username: $ADMIN_USERNAME";
   echo;
 
   echo "---";
@@ -129,7 +151,7 @@ deploy () {
   az deployment group create \
     --resource-group $RESOURCE_GROUP \
     --template-file $TEMPLATE_FILE \
-    --parameters serverName=$SERVER_NAME;
+    --parameters serverName=$SERVER_NAME adminUsername=$ADMIN_USERNAME adminPassword=$ADMIN_PASSWORD;
 
   if [ $? -ne 0 ]
     then
@@ -160,7 +182,13 @@ run-ps-copy-local-public-key () {
 
   local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/copy-ssh-public-key-to-server.ps1";
   local ARGS="-username ${ADMIN_USERNAME} -hostname ${SERVER_FQDN}";
+
+  # export admin pass to evironment variable for use in script
+  # using an environment variable keeps the password off the command line
+  # which can be potentially seen in ps queries by other system users
+  export ADMIN_PASSWORD="$ADMIN_PASSWORD";
   run-local-ps $PS_FILE "$ARGS";
+  export ADMIN_PASSWORD=""; #reset the environment variable after use
 }
 
 run-ps-install-vmp () {
@@ -211,11 +239,16 @@ restart-vm () {
 }
 
 main () {
-  parse-script-inputs $@;
-
-  validate-local-ps-install;
-
+  # validate required dependencies
   validate-az-cli-install;
+  validate-local-ps-install;
+  validate-sshpass-install;
+
+  # parse script inputs and gather user inputs
+  parse-script-inputs $@;
+  get-user-inputs;
+
+  # check for signed in Azure CLI user
   check-signed-in-user;
 
   deploy;

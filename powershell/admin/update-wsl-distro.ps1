@@ -9,7 +9,7 @@ while ($netCheck -ne '"0"') {
 
   $netCheck = (wsl -u root sh -c "$command")
 }
-Write-Host "WSL networking as recovered. Moving on..."
+Write-Host "WSL networking has recovered. Moving on..."
 
 # apt-get install -y isn't enough to be truly noninteractive
 $env:DEBIAN_FRONTEND = "noninteractive"
@@ -17,8 +17,8 @@ $env:WSLENV += ":DEBIAN_FRONTEND"
 
 # update Ubuntu base packages
 Write-Host "Updating distribution packages..."
-wsl -u root apt-get update
-wsl -u root apt-get full-upgrade -y
-wsl -u root apt-get autoremove -y
-wsl -u root apt-get autoclean
-wsl --shutdown  # instead of 'reboot'
+Write-Host (& wsl -u root sh -c 'apt-get update && apt-get full-upgrade -y && apt-get autoremove -y && apt-get autoclean && exit')
+Write-Host (& wsl --shutdown)  # instead of 'reboot'
+
+Write-Host "Bringing the distribution back up with updates installed..."
+Write-Host (& wsl -u root sleep 5) # bring the distro back up with updates installed
