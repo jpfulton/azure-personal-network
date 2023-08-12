@@ -7,6 +7,7 @@ echo;
 
 # Import library functions
 source ${CURRENT_SCRIPT_DIR}lib/azure-cli-functions.sh;
+source ${CURRENT_SCRIPT_DIR}lib/dependency-functions.sh;
 source ${CURRENT_SCRIPT_DIR}lib/powershell-exec-functions.sh;
 source ${CURRENT_SCRIPT_DIR}lib/sshpass-functions.sh;
 
@@ -239,10 +240,7 @@ restart-vm () {
 }
 
 main () {
-  # validate required dependencies
-  validate-az-cli-install;
-  validate-local-ps-install;
-  validate-sshpass-install;
+  validate-dependencies;
 
   # parse script inputs and gather user inputs
   parse-script-inputs $@;
