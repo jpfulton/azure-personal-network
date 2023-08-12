@@ -13,4 +13,4 @@ $authorizedKey = Get-Content -Path ~\.ssh\id_ed25519.pub
 $remotePowershell = "powershell New-Item -Force -ItemType Directory -Path ~\.ssh; Add-Content -Force -Path ~\.ssh\authorized_keys -Value '$authorizedKey'; Add-Content -Force -Path c:\ProgramData\ssh\administrators_authorized_keys -Value '$authorizedKey'"
 
 # Connect to your server and run the PowerShell using the $remotePowerShell variable
-ssh ${username}@${hostname}.private.jpatrickfulton.com $remotePowershell
+ssh ${username}@${hostname} $remotePowershell

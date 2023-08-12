@@ -1,2 +1,2 @@
-# Install Windows Subsystem for Linux without distribution
-wsl --install --no-distribution
+# Install WSL without store interaction
+wsl --install --no-distribution --inbox

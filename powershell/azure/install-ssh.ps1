@@ -1,4 +1,5 @@
-# Helper function for MSI installations
+# Helper function for MSI installs
+# Functions have to be inline for remote execution via Azure CLI
 function Install-Msi {
     param(
         $File

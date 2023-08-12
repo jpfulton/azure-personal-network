@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Currently hard coded constants
+ADMIN_USERNAME="jpfulton";
+PRIVATE_DNS_ZONE="private.jpatrickfulton.com";
+
 CURRENT_SCRIPT_DIR="$(dirname "$0")/";
 echo "Running ${0} from ${CURRENT_SCRIPT_DIR}";
 echo "---";
@@ -8,6 +12,9 @@ echo;
 # Import library functions
 source ${CURRENT_SCRIPT_DIR}lib/azure-cli-functions.sh;
 source ${CURRENT_SCRIPT_DIR}lib/powershell-exec-functions.sh;
+
+# Set remote execution PS script
+REMOTE_EXECUTION_PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/run-file-on-remote-server.ps1";
 
 print-usage () {
   echo "Usage: ${0} [options] [resource-group] [server-name]";
@@ -99,6 +106,7 @@ parse-script-inputs () {
   fi
 
   SERVER_NAME="$2";
+  SERVER_FQDN="${SERVER_NAME}.${PRIVATE_DNS_ZONE}";
   if [ "$SERVER_NAME" == "" ]
     then
       print-usage;
@@ -107,6 +115,8 @@ parse-script-inputs () {
 
   echo "Using resource group: $RESOURCE_GROUP";
   echo "Using server name: $SERVER_NAME";
+  echo "Using full server private DNS: $SERVER_FQDN";
+  echo;
 
   echo "---";
   echo;
@@ -134,14 +144,14 @@ deploy () {
 run-ps-disable-nla () {
   echo "Disabling NLA for RDP...";
 
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/disable-nla.ps1";
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/azure/disable-nla.ps1";
   run-azure-ps $RESOURCE_GROUP $SERVER_NAME $PS_FILE;
 }
 
 run-ps-install-ssh () {
   echo "Installing SSH...";
 
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/install-ssh.ps1";
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/azure/install-ssh.ps1";
   run-azure-ps $RESOURCE_GROUP $SERVER_NAME $PS_FILE;
 }
 
@@ -149,45 +159,43 @@ run-ps-copy-local-public-key () {
   echo "Installing local public key to server...";
 
   local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/copy-ssh-public-key-to-server.ps1";
-  local ARGS="-username jpfulton -hostname ${SERVER_NAME}";
+  local ARGS="-username ${ADMIN_USERNAME} -hostname ${SERVER_FQDN}";
   run-local-ps $PS_FILE "$ARGS";
 }
 
 run-ps-install-vmp () {
   echo "Enabling Virtual Machine Platfrom OS Feature...";
 
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/enable-virtual-machine-platform.ps1";
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/azure/enable-virtual-machine-platform.ps1";
   run-azure-ps $RESOURCE_GROUP $SERVER_NAME $PS_FILE;
 }
 
 run-ps-install-wsl () {
   echo "Installing WSL...";
 
-  local REMOTE_EXECUTION_PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/run-file-on-remote-server.ps1";
   local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/install-wsl.ps1";
-  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE jpfulton ${SERVER_NAME}.private.jpatrickfulton.com;
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
-run-ps-install-ubuntu-appx () {
-  echo "Installing Ubuntu 22.04 LTS Appx Package...";
+run-ps-config-wsl () {
+  echo "Configuring WSL with Ubuntu 22.04 LTS...";
 
-  local REMOTE_EXECUTION_PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/run-file-on-remote-server.ps1";
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/install-ubuntu-appx.ps1";
-  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE jpfulton ${SERVER_NAME}.private.jpatrickfulton.com; 
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/config-wsl.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
-run-ps-install-and-config-wsl () {
-  echo "Install and configure WSL with Ubuntu 22.04 LTS...";
+run-ps-update-wsl-distro () {
+  echo "Updating base packages in WSL Ubuntu 22.04 LTS installation...";
 
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/install-and-config-wsl.ps1";
-  run-azure-ps $RESOURCE_GROUP $SERVER_NAME $PS_FILE;
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/update-wsl-distro.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
 run-ps-config-and-run-windows-update () {
   echo "Configuring and then running Windows Updates...";
   echo "The server _may_ reboot after this step.";
 
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/configure-windows-update.ps1";
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/azure/configure-windows-update.ps1";
   run-azure-ps $RESOURCE_GROUP $SERVER_NAME $PS_FILE;
 }
 
@@ -230,8 +238,8 @@ main () {
       restart-vm;
       run-ps-install-wsl;
       restart-vm;
-      run-ps-install-ubuntu-appx;
-      run-ps-install-and-config-wsl;
+      run-ps-config-wsl;
+      run-ps-update-wsl-distro;
   fi
 
   if [ "$NO_WIN_UPDATES" -eq 0 ]
