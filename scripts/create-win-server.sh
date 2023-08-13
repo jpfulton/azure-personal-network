@@ -285,7 +285,7 @@ run-ps-config-and-run-windows-update () {
   echo "The server _may_ reboot after this step.";
 
   local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/azure/configure-windows-update.ps1";
-  run-azure-ps $RESOURCE_GROUP $SERVER_NAME $PS_FILE;
+  run-azure-ps $RESOURCE_GROUP $SERVER_NAME $PS_FILE --no-wait;
 }
 
 restart-vm () {

@@ -8,12 +8,13 @@ validate-local-ps-install () {
 }
 
 run-azure-ps () {
-  if [ "$#" -ne 3 ]
+  if [ "$#" -lt 3 ]
     then
-      echo "ERROR: run-ps function requires 3 arguments. Exiting...";
-      echo "INFO:  Required arguement one: Resource Group.";
-      echo "INFO:  Required arguement two: Virtual Machine Name.";
-      echo "INFO:  Required arguement one: Path to Powershell Script.";
+      echo "ERROR: run-ps function requires at least 3 arguments. Exiting...";
+      echo "INFO:  Required argument one: Resource Group.";
+      echo "INFO:  Required argument two: Virtual Machine Name.";
+      echo "INFO:  Required argument three: Path to Powershell Script.";
+      echo "INFO:  Optional argument four: [--no-wait] to indicate no waiting on the script to complete";
       echo;
 
       exit 1;
@@ -31,11 +32,19 @@ run-azure-ps () {
       exit 1;
   fi
 
+  if [ "$4" = "--no-wait" ]
+    then
+      echo "INFO: Long running script will be executed without a wait in background.";
+      ENABLE_NO_WAIT="--no-wait";
+    else
+      ENABLE_NO_WAIT="";
+  fi
+
   az vm run-command invoke \
     --command-id RunPowerShellScript \
     --name $SERVER_NAME \
     -g $RESOURCE_GROUP \
-    --scripts @${PS_FILE};
+    --scripts @${PS_FILE} $ENABLE_NO_WAIT;
 
   echo "---";
   echo;
@@ -45,8 +54,8 @@ run-local-ps () {
   if [ "$#" -lt 1 ]
     then
       echo "ERROR: run-local-ps function requires at least one argument. Exiting...";
-      echo "INFO:  Required arguement one: Powershell file.";
-      echo "INFO:  Optional arguement: Arguments as string.";
+      echo "INFO:  Required argument one: Powershell file.";
+      echo "INFO:  Optional argument: Arguments as string.";
       echo;
 
       exit 1;
@@ -73,10 +82,10 @@ run-ps-as-admin () {
   if [ "$#" -ne 4 ]
     then
       echo "ERROR: run-ps-as-admin function requires four arguments. Exiting...";
-      echo "INFO:  Required arguement one: Local remote exection shell Powershell file.";
-      echo "INFO:  Required arguement two: Powershell file for remote execution.";
-      echo "INFO:  Required arguement three: Admin username.";
-      echo "INFO:  Required arguement four: Server host name.";
+      echo "INFO:  Required argument one: Local remote exection shell Powershell file.";
+      echo "INFO:  Required argument two: Powershell file for remote execution.";
+      echo "INFO:  Required argument three: Admin username.";
+      echo "INFO:  Required argument four: Server host name.";
       echo;
 
       exit 1;
