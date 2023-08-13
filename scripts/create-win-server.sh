@@ -259,6 +259,13 @@ run-ps-install-git () {
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
+run-ps-install-gpg4win () {
+  echo "Installing GPG4Win...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/install-gpg4win.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
 run-ps-install-native-build-libs () {
   echo "Installing native build libraries...";
 
@@ -360,6 +367,7 @@ main () {
       run-ps-install-choco;
       restart-vm;
       run-ps-install-git;
+      run-ps-install-gpg4win;
       run-ps-install-native-build-libs;
       run-ps-install-nodejs;
       restart-vm;
