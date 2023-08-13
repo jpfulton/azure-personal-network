@@ -231,6 +231,13 @@ run-ps-update-wsl-distro () {
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
+run-ps-enable-systemd-wsl () {
+  echo "Enabling systemd in WSL Ubuntu 22.04 LTS installation...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/wsl/enable-wsl-systemd.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
 run-ps-install-choco () {
   echo "Installing Chocolatey...";
 
@@ -324,6 +331,7 @@ main () {
       restart-vm;
       run-ps-config-wsl;
       run-ps-update-wsl-distro;
+      run-ps-enable-systemd-wsl;
   fi
 
   if [ "$NO_DEV_TOOLS" -eq 0 ]
