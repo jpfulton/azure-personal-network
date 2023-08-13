@@ -17,13 +17,13 @@ REMOTE_EXECUTION_PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/run-file-on-r
 print-usage () {
   echo "Usage: ${0} [options] [resource-group] [server-name]";
   echo;
-  echo "Options are used to disable default behaviors. No options performs all operations.";
   echo "Options:";
   echo "  -s,--no-ssh:            Disable SSH installation.";
   echo "  -n,--no-nla:            Disable NLA disable script.";
   echo "  -w,--no-wsl:            Disable WSL installation.";
   echo "  -u,--no-windows-update: Disable Windows Update configuration and run.";
   echo "  -d,--no-dev-tools:      Disable development tools installation.";
+  echo "  --personal-repos:       Enable checkout of personal repositories.";
   echo "---";
   echo;
 }
@@ -52,6 +52,7 @@ parse-script-inputs () {
   NO_WSL=0;
   NO_WIN_UPDATES=0;
   NO_DEV_TOOLS=0;
+  PERSONAL_REPOS=0;
 
   eval set -- "$OPTIONS";
   shift 6; # jump past the getopt options in the options string
@@ -68,6 +69,8 @@ parse-script-inputs () {
         NO_WIN_UPDATES=1; shift ;;
       -d|--no-dev-tools)
         NO_DEV_TOOLS=1; shift ;;
+      --personal-repos)
+        PERSONAL_REPOS=1; shift ;;
       --) 
         shift; ;;
       *) 
@@ -252,6 +255,13 @@ run-ps-install-git () {
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
+run-ps-install-native-build-libs () {
+  echo "Installing native build libraries...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/install-native-build-libs.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
 run-ps-install-nodejs () {
   echo "Installing NodeJS...";
 
@@ -277,6 +287,13 @@ run-ps-install-chrome () {
   echo "Installing Google Chrome...";
 
   local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/install-chrome.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
+run-ps-checkout-personal-repos () {
+  echo "Checking out personal repositories...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/checkout-jpfulton-repos.ps1";
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
@@ -339,11 +356,17 @@ main () {
       run-ps-install-choco;
       restart-vm;
       run-ps-install-git;
+      run-ps-install-native-build-libs;
       run-ps-install-nodejs;
       restart-vm;
       run-ps-install-yarn;
       run-ps-install-vscode;
       run-ps-install-chrome;
+
+      if [ "$PERSONAL_REPOS" -eq 1 ]
+        then
+          run-ps-checkout-personal-repos;
+      fi
   fi
 
   if [ "$NO_WIN_UPDATES" -eq 0 ]
