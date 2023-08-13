@@ -121,6 +121,9 @@ get-user-inputs () {
   read -p "Enter a private DNS zone name [private.jpatrickfulton.com]: " PRIVATE_DNS_ZONE;
   PRIVATE_DNS_ZONE=${PRIVATE_DNS_ZONE:-private.jpatrickfulton.com};
 
+  read -p "Enter a vm size [Standard_D2s_v3]: " VM_SIZE;
+  VM_SIZE=${VM_SIZE:-Standard_D2s_v3};
+
   read -p "Enter an admin account username [jpfulton]: " ADMIN_USERNAME;
   ADMIN_USERNAME=${ADMIN_USERNAME:-jpfulton};
 
@@ -152,6 +155,7 @@ deploy () {
   echo "Launching deployment...";
 
   export SERVER_NAME="$SERVER_NAME";
+  export VM_SIZE="$VM_SIZE";
   export ADMIN_USERNAME="$ADMIN_USERNAME";
 
   # export admin pass to evironment variable for use in script
