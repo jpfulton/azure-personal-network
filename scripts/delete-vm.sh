@@ -53,7 +53,7 @@ remove-keys-from-known-hosts () {
 
   # Remove lines starting with servername from known hosts file
   FILE_CONTENTS=$(grep -v --line-buffered "^${SERVER_NAME}" ~/.ssh/known_hosts);
-  echo $FILE_CONTENTS > ~/.ssh/known_hosts
+  echo $FILE_CONTENTS > ~/.ssh/known_hosts;
 
   echo "---";
   echo;
