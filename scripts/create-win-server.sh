@@ -213,21 +213,63 @@ run-ps-install-vmp () {
 run-ps-install-wsl () {
   echo "Installing WSL...";
 
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/install-wsl.ps1";
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/wsl/install-wsl.ps1";
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
 run-ps-config-wsl () {
   echo "Configuring WSL with Ubuntu 22.04 LTS...";
 
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/config-wsl.ps1";
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/wsl/config-wsl.ps1";
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
 run-ps-update-wsl-distro () {
   echo "Updating base packages in WSL Ubuntu 22.04 LTS installation...";
 
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/update-wsl-distro.ps1";
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/wsl/update-wsl-distro.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
+run-ps-install-choco () {
+  echo "Installing Chocolatey...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/install-choco.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
+run-ps-install-git () {
+  echo "Installing Git...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/install-git.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
+run-ps-install-nodejs () {
+  echo "Installing NodeJS...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/install-nodejs.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
+run-ps-install-yarn () {
+  echo "Installing Yarn...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/install-yarn.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
+run-ps-install-vscode () {
+  echo "Installing VS Code...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/install-vscode.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
+run-ps-install-chrome () {
+  echo "Installing Google Chrome...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/install-chrome.ps1";
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
@@ -282,6 +324,18 @@ main () {
       restart-vm;
       run-ps-config-wsl;
       run-ps-update-wsl-distro;
+  fi
+
+  if [ "$NO_DEV_TOOLS" -eq 0 ]
+    then
+      run-ps-install-choco;
+      restart-vm;
+      run-ps-install-git;
+      run-ps-install-nodejs;
+      restart-vm;
+      run-ps-install-yarn;
+      run-ps-install-vscode;
+      run-ps-install-chrome;
   fi
 
   if [ "$NO_WIN_UPDATES" -eq 0 ]
