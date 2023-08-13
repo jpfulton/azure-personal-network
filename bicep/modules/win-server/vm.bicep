@@ -50,7 +50,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-03-01' = {
       imageReference: {
         publisher: 'MicrosoftWindowsServer'
         offer: 'WindowsServer'
-        sku: '2022-datacenter-azure-edition'
+        sku: '2022-datacenter-azure-edition-smalldisk'
         version: 'latest'
       }
       osDisk: {
@@ -62,7 +62,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-03-01' = {
           storageAccountType: 'Standard_LRS'
         }
         deleteOption: 'Delete'
-        diskSizeGB: 127
+        diskSizeGB: 32
       }
       dataDisks: []
       diskControllerType: 'SCSI'
