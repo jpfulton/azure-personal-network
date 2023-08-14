@@ -124,6 +124,15 @@ get-user-inputs () {
   read -p "Enter a vm size [Standard_D2s_v3]: " VM_SIZE;
   VM_SIZE=${VM_SIZE:-Standard_D2s_v3};
 
+  read -p "Create server as spot instance (true/false)[true]: " IS_SPOT;
+  IS_SPOT=${IS_SPOT:-true};
+
+  if [ ! "$IS_SPOT" = "true" ] && [ ! "$IS_SPOT" = "false" ]
+    then
+      echo "Spot instance prompt must be either true or false. Exiting...";
+      exit 1;
+  fi
+
   read -p "Enter an admin account username [jpfulton]: " ADMIN_USERNAME;
   ADMIN_USERNAME=${ADMIN_USERNAME:-jpfulton};
 
@@ -163,8 +172,8 @@ deploy () {
   # which can be potentially seen in ps queries by other system users
   export ADMIN_PASSWORD="$SCRIPT_LOCAL_ADMIN_PASSWORD";
 
-  local TEMPLATE_FILE="${CURRENT_SCRIPT_DIR}../bicep/win-server-spot.bicep";
-  local PARAM_FILE="${CURRENT_SCRIPT_DIR}../bicep/win-server-spot.bicepparam";
+  local TEMPLATE_FILE="${CURRENT_SCRIPT_DIR}../bicep/win-server.bicep";
+  local PARAM_FILE="${CURRENT_SCRIPT_DIR}../bicep/win-server.bicepparam";
   az deployment group create \
     --resource-group $RESOURCE_GROUP \
     --template-file $TEMPLATE_FILE \

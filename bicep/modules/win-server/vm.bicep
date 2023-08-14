@@ -36,78 +36,93 @@ param nicId string
 ])
 param vmSize string = 'Standard_D2s_v3'
 
+@description('Indicates if this vm instance should be a spot instance.')
+param isSpot bool = true
+
+// configuration properties required for spot instance creation
+var spotConfig = {
+  priority: 'Spot'
+  evictionPolicy: 'Deallocate'
+  billingProfile: {
+    maxPrice: -1
+  }
+}
+
+// configuration properties required for standard instance creation
+var standardConfig = {
+  priority: 'Regular'
+}
+
+// core virtual machine properties
+var coreVmProperties = {
+  hardwareProfile: {
+    vmSize: vmSize
+  }
+  storageProfile: {
+    imageReference: {
+      publisher: 'MicrosoftWindowsServer'
+      offer: 'WindowsServer'
+      sku: '2022-datacenter-azure-edition-smalldisk'
+      version: 'latest'
+    }
+    osDisk: {
+      osType: 'Windows'
+      name: '${serverName}_OsDisk'
+      createOption: 'FromImage'
+      caching: 'ReadWrite'
+      managedDisk: {
+        storageAccountType: 'Standard_LRS'
+      }
+      deleteOption: 'Delete'
+      diskSizeGB: 32
+    }
+    dataDisks: []
+    diskControllerType: 'SCSI'
+  }
+  osProfile: {
+    computerName: serverName
+    adminUsername: adminUsername
+    adminPassword: adminPassword
+    windowsConfiguration: {
+      provisionVMAgent: true
+      enableAutomaticUpdates: true
+      patchSettings: {
+        patchMode: 'AutomaticByOS'
+        assessmentMode: 'ImageDefault'
+        enableHotpatching: false
+      }
+      enableVMAgentPlatformUpdates: false
+    }
+    secrets: []
+    allowExtensionOperations: true
+  }
+  securityProfile: {
+    encryptionAtHost: true
+  }
+  networkProfile: {
+    networkInterfaces: [
+      {
+        id: nicId
+        properties: {
+          deleteOption: 'Delete'
+        }
+      }
+    ]
+  }
+  diagnosticsProfile: {
+    bootDiagnostics: {
+      enabled: true
+    }
+  }
+}
+
 resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   name: serverName
   location: location
   identity: {
     type: 'SystemAssigned'
   }
-  properties: {
-    hardwareProfile: {
-      vmSize: vmSize
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'MicrosoftWindowsServer'
-        offer: 'WindowsServer'
-        sku: '2022-datacenter-azure-edition-smalldisk'
-        version: 'latest'
-      }
-      osDisk: {
-        osType: 'Windows'
-        name: '${serverName}_OsDisk'
-        createOption: 'FromImage'
-        caching: 'ReadWrite'
-        managedDisk: {
-          storageAccountType: 'Standard_LRS'
-        }
-        deleteOption: 'Delete'
-        diskSizeGB: 32
-      }
-      dataDisks: []
-      diskControllerType: 'SCSI'
-    }
-    osProfile: {
-      computerName: serverName
-      adminUsername: adminUsername
-      adminPassword: adminPassword
-      windowsConfiguration: {
-        provisionVMAgent: true
-        enableAutomaticUpdates: true
-        patchSettings: {
-          patchMode: 'AutomaticByOS'
-          assessmentMode: 'ImageDefault'
-          enableHotpatching: false
-        }
-        enableVMAgentPlatformUpdates: false
-      }
-      secrets: []
-      allowExtensionOperations: true
-    }
-    securityProfile: {
-      encryptionAtHost: true
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: nicId
-          properties: {
-            deleteOption: 'Delete'
-          }
-        }
-      ]
-    }
-    diagnosticsProfile: {
-      bootDiagnostics: {
-        enabled: true
-      }
-    }
-    priority: 'Spot'
-    evictionPolicy: 'Deallocate'
-    billingProfile: {
-      maxPrice: -1
-    }
-  }
+  properties: isSpot ? union(coreVmProperties, spotConfig) : union(coreVmProperties, standardConfig)
 }
 
 resource aadLoginExtension 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {

@@ -1,3 +1,6 @@
+@description('Bool to determine if the vm will be created as a spot instance.')
+param isSpot bool = true
+
 @description('Name for the virtual machine.')
 @maxLength(15)
 param serverName string
@@ -50,5 +53,6 @@ module vmModule 'modules/win-server/vm.bicep' = {
     nicId: nicModule.outputs.nicId
     serverName: serverName
     vmSize: vmSize
+    isSpot: isSpot
   }
 }
