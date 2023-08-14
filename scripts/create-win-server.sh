@@ -349,9 +349,17 @@ main () {
 
   if [ "$NO_NLA" -eq 0 ]
     then
-      run-ps-disable-nla;
-      restart-vm;
+      run-ps-disable-nla; # mandatory restart will be caught in next step
   fi
+
+  # install Chocolately package manager
+  run-ps-install-choco;
+  restart-vm;
+
+  # install NodeJS and Yarn
+  run-ps-install-nodejs;
+  restart-vm;
+  run-ps-install-yarn;
 
   if [ "$NO_WSL" -eq 0 ]
     then
@@ -366,14 +374,9 @@ main () {
 
   if [ "$NO_DEV_TOOLS" -eq 0 ]
     then
-      run-ps-install-choco;
-      restart-vm;
       run-ps-install-git;
       run-ps-install-gpg4win;
       run-ps-install-native-build-libs;
-      run-ps-install-nodejs;
-      restart-vm;
-      run-ps-install-yarn;
       run-ps-install-vscode;
       run-ps-install-chrome;
 
