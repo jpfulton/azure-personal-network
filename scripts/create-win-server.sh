@@ -39,7 +39,7 @@ parse-script-inputs () {
   fi
 
   SCRIPT_NAME=$(basename "$0");
-  OPTIONS=$(getopt --options snwud --long no-ssh,no-nla,no-wsl,no-windows-updates,no-dev-tools --name "$SCRIPT_NAME" -- "$@");
+  OPTIONS=$(getopt --options nwud --long no-nla,no-wsl,no-windows-updates,no-dev-tools,personal-repos --name "$SCRIPT_NAME" -- "$@");
   if [ $? -ne 0 ]
     then
       echo "Incorrect options.";
@@ -47,7 +47,6 @@ parse-script-inputs () {
       exit 1;
   fi
 
-  NO_SSH=0;
   NO_NLA=0;
   NO_WSL=0;
   NO_WIN_UPDATES=0;
@@ -59,8 +58,6 @@ parse-script-inputs () {
 
   while true; do
     case "$1" in
-      -s|--no-ssh)
-        NO_SSH=1; shift ;;
       -n|--no-nla)
         NO_NLA=1; shift ;;
       -w|--no-wsl)
@@ -78,10 +75,6 @@ parse-script-inputs () {
     esac
   done
 
-  if [ "$NO_SSH" -eq 1 ]
-    then
-      echo "Disabling SSH installation.";
-  fi
   if [ "$NO_NLA" -eq 1 ]
     then
       echo "Disabling NLA script.";
@@ -346,13 +339,12 @@ main () {
   # check for signed in Azure CLI user
   check-signed-in-user;
 
+  # deploy bicep template
   deploy;
 
-  if [ "$NO_SSH" -eq 0 ]
-    then
-      run-ps-install-ssh;
-      run-ps-copy-local-public-key;
-  fi
+  # install ssh backed by powershell
+  run-ps-install-ssh;
+  run-ps-copy-local-public-key;
 
   if [ "$NO_NLA" -eq 0 ]
     then
