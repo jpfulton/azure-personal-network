@@ -158,6 +158,7 @@ deploy () {
 
   export SERVER_NAME="$SERVER_NAME";
   export VM_SIZE="$VM_SIZE";
+  export IS_SPOT="$IS_SPOT";
   export ADMIN_USERNAME="$ADMIN_USERNAME";
 
   # export admin pass to evironment variable for use in script
