@@ -32,13 +32,13 @@ if ($output.Events.Length -gt 0) {
     if ($event.EventType -eq "Preempt") {
       Add-ToLogFile -Content "Preempt event found. Starting graceful shutdown..."
 
-      # Message logged in users
-      Add-ToLogFile -Content "Messaging logged in users."
-      msg * "Azure spot instance eviction detected. Gracefull shutdown starting..."
-
       # Send SMS notification to administrators
       Add-ToLogFile -Content "Sending SMS notifications."
-      & $NOTIFIER_CLI eviction $HOSTNAME
+      & $NOTIFIER_CLI eviction $HOSTNAME &
+
+      # Message logged in users
+      Add-ToLogFile -Content "Messaging logged in users."
+      msg * "Azure spot instance eviction detected. Gracefull shutdown starting..." &
 
       # Write eviction discovery to system event log
       Add-ToLogFile -Content "Writing to event log."
