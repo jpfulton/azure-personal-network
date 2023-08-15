@@ -290,6 +290,20 @@ run-ps-install-yarn () {
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
+run-ps-install-dotnet-7 () {
+  echo "Installing .NET 7 runtime...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/general/install-dotnet-7.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
+run-ps-install-dotnet-7-sdk () {
+  echo "Installing .NET 7 SDK...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/install-dotnet-7-sdk.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
 run-ps-install-vscode () {
   echo "Installing VS Code...";
 
@@ -361,6 +375,9 @@ main () {
   restart-vm;
   run-ps-install-yarn;
 
+  # install .NET 7 runtime
+  run-ps-install-dotnet-7;
+
   if [ "$NO_WSL" -eq 0 ]
     then
       run-ps-install-vmp;
@@ -374,6 +391,7 @@ main () {
 
   if [ "$NO_DEV_TOOLS" -eq 0 ]
     then
+      run-ps-install-dotnet-7-sdk;
       run-ps-install-git;
       run-ps-install-gpg4win;
       run-ps-install-native-build-libs;
