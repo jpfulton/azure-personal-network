@@ -31,7 +31,7 @@ if ($output.Events.Length -gt 0) {
 
       # Send SMS notification to administrators
       Add-ToLogFile -Content "Sending SMS notifications."
-      Start-Job -ScriptBlock { 
+      $smsJob = Start-Job -ScriptBlock { 
         $NOTIFIER_CLI="C:\Users\jpfulton\AppData\Local\Yarn\bin\sms-notify-cli.cmd"
         $HOSTNAME=$(hostname)
         & $NOTIFIER_CLI eviction $HOSTNAME 
@@ -39,7 +39,7 @@ if ($output.Events.Length -gt 0) {
 
       # Message logged in users
       Add-ToLogFile -Content "Messaging logged in users."
-      Start-Job -ScriptBlock { msg * "Azure spot instance eviction detected. Graceful shutdown starting..." }
+      $msgJob = Start-Job -ScriptBlock { msg * "Azure spot instance eviction detected. Graceful shutdown starting..." }
 
       # Write eviction discovery to system event log
       Add-ToLogFile -Content "Writing to event log."
@@ -50,8 +50,8 @@ if ($output.Events.Length -gt 0) {
         -EntryType Warning `
         -Message "Azure eviction event discovered. Starting gracecful shutdown..."
 
-      # Sleep for 5 seconds
-      Start-Sleep 5
+      # wait on background jobs
+      Wait-Job -Job [$smsJob, $msgJob]
 
       # Initiate shutdown
       Add-ToLogFile -Content "Shutting down."
