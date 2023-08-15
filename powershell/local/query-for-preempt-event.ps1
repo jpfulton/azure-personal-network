@@ -10,18 +10,38 @@ $ENDPOINT_URL="http://${ENDPOINT_IP}/metadata/scheduledevents?api-version=${API_
 $NOTIFIER_CLI="C:\Users\jpfulton\AppData\Local\Yarn\bin\sms-notify-cli.cmd"
 $HOSTNAME=$(hostname)
 
-Write-Host "Calling Azure Metadata API endpoint..."
+function Add-ToLogFile () {
+  param (
+    [string]$Content
+    )
+  $LOG_FILE="$env:ProgramFiles\SpotEvictionQueryService\eviction-log.txt"
+  $NOW=(Get-Date)
+  
+  $logLine="${NOW} - ${Content}"
+  Add-Content -Path $LOG_FILE -Value $logLine
+}
+
+Add-ToLogFile -Content "Calling Azure Metadata API endpoint..."
 $jsonOutput = Invoke-RestMethod -Method Get -Uri $ENDPOINT_URL -Headers $HEADERS | ConvertFrom-Json -Depth 64
 $output = ConvertFrom-Json -InputObject $jsonOutput
 
 if ($output.Events.Length -gt 0) {
-  Write-Host "Azure event(s) found... Looking for Preempt events..."
+  Add-ToLogFile -Content "Azure event(s) found... Looking for Preempt events..."
 
   foreach($event in $output.Events) {
     if ($event.EventType -eq "Preempt") {
-      Write-Host "Preempt event found. Starting graceful shutdown..."
+      Add-ToLogFile -Content "Preempt event found. Starting graceful shutdown..."
+
+      # Message logged in users
+      Add-ToLogFile -Content "Messaging logged in users."
+      msg * "Azure spot instance eviction detected. Gracefull shutdown starting..."
+
+      # Send SMS notification to administrators
+      Add-ToLogFile -Content "Sending SMS notifications."
+      & $NOTIFIER_CLI eviction $HOSTNAME
 
       # Write eviction discovery to system event log
+      Add-ToLogFile -Content "Writing to event log."
       Write-EventLog `
         -EventId 100 `
         -LogName "Application" `
@@ -29,16 +49,11 @@ if ($output.Events.Length -gt 0) {
         -EntryType Warning `
         -Message "Azure eviction event discovered. Starting gracecful shutdown..."
 
-      # Message logged in users
-      msg * "Azure spot instance eviction detected. Gracefull shutdown starting..."
-
-      # Send SMS notification to administrators
-      & $NOTIFIER_CLI eviction $HOSTNAME
-
       # Sleep for 5 seconds
       Start-Sleep 5
 
       # Initiate shutdown
+      Add-ToLogFile -Content "Shutting down."
       Stop-Computer -Force
     }
   }
