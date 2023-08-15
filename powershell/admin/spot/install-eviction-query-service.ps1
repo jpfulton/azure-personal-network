@@ -3,18 +3,20 @@ $ProgressPreference = 'SilentlyContinue'
 
 $SERVICE_NAME="Azure Spot Instance Eviction Service"
 
-$SERVICE_VERSION="v0.0.8"
+$SERVICE_VERSION="v0.0.12"
 $SERVICE_ARCHIVE_NAME="binaries-win-x64-${SERVICE_VERSION}.zip"
 $SERVICE_URL="https://github.com/jpfulton/short-interval-scheduler-service/releases/download/${SERVICE_VERSION}/${SERVICE_ARCHIVE_NAME}"
 
 $SCRIPT_NAME="query-for-preempt-event.ps1"
 $SCRIPT_URL="https://raw.githubusercontent.com/jpfulton/azure-personal-network/main/powershell/local/${SCRIPT_NAME}"
 
-$SERVICE_INSTALL_DIR="$env:ProgramFiles\SpotEvictionQueryService"
+$fs = New-Object -ComObject Scripting.FileSystemObject
+$PROGRAM_FILES_SHORTPATH=($fs.GetFolder("${env:ProgramFiles}").ShortPath)
+$SERVICE_INSTALL_DIR="${PROGRAM_FILES_SHORTPATH}\SpotEvictionQueryService"
 $SERVICE_FULL_EXE_PATH="${SERVICE_INSTALL_DIR}\Jpfulton.ShortIntervalScheduler.exe"
 
 $SCRIPT_FULL_PATH="${SERVICE_INSTALL_DIR}\${SCRIPT_NAME}"
-$SERVICE_CMD="powershell.exe ${SCRIPT_FULL_PATH}"
+$SERVICE_CMD="powershell.exe -File ${SCRIPT_FULL_PATH}"
 
 $existingService = Get-Service -Name $SERVICE_NAME -ErrorAction SilentlyContinue
 if ($existingService) {
