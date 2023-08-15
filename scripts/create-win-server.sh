@@ -251,7 +251,7 @@ run-ps-enable-systemd-wsl () {
 run-ps-install-choco () {
   echo "Installing Chocolatey...";
 
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/install-choco.ps1";
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/general/install-choco.ps1";
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
@@ -279,14 +279,14 @@ run-ps-install-native-build-libs () {
 run-ps-install-nodejs () {
   echo "Installing NodeJS...";
 
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/install-nodejs.ps1";
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/general/install-nodejs.ps1";
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
 run-ps-install-yarn () {
   echo "Installing Yarn...";
 
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/dev-tools/install-yarn.ps1";
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/general/install-yarn.ps1";
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
