@@ -45,5 +45,8 @@ Expand-Archive -Force -Path "$env:TEMP\${SERVICE_ARCHIVE_NAME}" -DestinationPath
 Move-Item -Force -Path "$env:TEMP\${SCRIPT_NAME}" -Destination $SERVICE_INSTALL_DIR
 
 # Install and start the service
-New-Service -Name $SERVICE_NAME -BinaryPathName "`"${SERVICE_FULL_EXE_PATH}`" `"${SERVICE_CMD}`" 5" -StartupType Automatic
+New-Service -Name $SERVICE_NAME `
+  -BinaryPathName "`"${SERVICE_FULL_EXE_PATH}`" `"${SERVICE_CMD}`" 5" `
+  -StartupType Automatic
+
 Start-Service -Name $SERVICE_NAME
