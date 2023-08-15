@@ -16,6 +16,12 @@ $SERVICE_FULL_EXE_PATH="${SERVICE_INSTALL_DIR}\Jpfulton.ShortIntervalScheduler.e
 $SCRIPT_FULL_PATH="${SERVICE_INSTALL_DIR}\${SCRIPT_NAME}"
 $SERVICE_CMD="powershell.exe ${SCRIPT_FULL_PATH}"
 
+$existingService = Get-Service -Name $SERVICE_NAME -ErrorAction SilentlyContinue
+if ($existingService) {
+  Stop-Service -Name $SERVICE_NAME
+  sc.exe delete "${SERVICE_NAME}"
+}
+
 Remove-Item -Force "$env:TEMP\${SERVICE_ARCHIVE_NAME}" -ErrorAction SilentlyContinue
 Remove-Item -Force "$env:TEMP\${SCRIPT_NAME}" -ErrorAction SilentlyContinue
 
@@ -28,9 +34,5 @@ Expand-Archive -Force -Path "$env:TEMP\${SERVICE_ARCHIVE_NAME}" -DestinationPath
 
 Move-Item -Force -Path "$env:TEMP\${SCRIPT_NAME}" -Destination $SERVICE_INSTALL_DIR
 
-$existingService = Get-Service -Name $SERVICE_NAME -ErrorAction SilentlyContinue
-if ($existingService) {
-  sc.exe delete "${SERVICE_NAME}"
-}
 New-Service -Name $SERVICE_NAME -BinaryPathName "`"${SERVICE_FULL_EXE_PATH}`" `"${SERVICE_CMD}`" 10" -StartupType Automatic
 Start-Service -Name $SERVICE_NAME
