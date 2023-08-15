@@ -39,19 +39,23 @@ if ($output.Events.Length -gt 0) {
 
       # Message logged in users
       Add-ToLogFile -Content "Messaging logged in users."
-      $msgJob = Start-Job -ScriptBlock { msg * "Azure spot instance eviction detected. Graceful shutdown starting..." }
+      $msgJob = Start-Job -ScriptBlock { 
+        msg * "Azure spot instance eviction detected. Graceful shutdown starting..." 
+      }
 
       # Write eviction discovery to system event log
       Add-ToLogFile -Content "Writing to event log."
-      Write-EventLog `
+      $eventLogJob = Start-Job -ScriptBlock {
+        Write-EventLog `
         -EventId 100 `
         -LogName "Application" `
         -Source "Azure Spot Instance Eviction Service" `
         -EntryType Warning `
         -Message "Azure eviction event discovered. Starting gracecful shutdown..."
+      }
 
       # wait on background jobs
-      Wait-Job -Job [$smsJob, $msgJob]
+      Wait-Job -Job @($smsJob, $msgJob, $eventLogJob)
 
       # Initiate shutdown
       Add-ToLogFile -Content "Shutting down."
