@@ -22,7 +22,7 @@ function Add-ToLogFile () {
 }
 
 Add-ToLogFile -Content "Calling Azure Metadata API endpoint..."
-$jsonOutput = Invoke-RestMethod -Method Get -Uri $ENDPOINT_URL -Headers $HEADERS | ConvertFrom-Json
+$jsonOutput = Invoke-RestMethod -Method Get -Uri $ENDPOINT_URL -Headers $HEADERS | ConvertTo-Json -Depth 64
 $output = ConvertFrom-Json -InputObject $jsonOutput
 
 if ($output.Events.Length -gt 0) {
