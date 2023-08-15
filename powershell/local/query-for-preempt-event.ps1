@@ -7,9 +7,6 @@ $API_VERSION="2020-07-01"
 $HEADERS=@{ "Metadata" = "true" }
 $ENDPOINT_URL="http://${ENDPOINT_IP}/metadata/scheduledevents?api-version=${API_VERSION}"
 
-$NOTIFIER_CLI="C:\Users\jpfulton\AppData\Local\Yarn\bin\sms-notify-cli.cmd"
-$HOSTNAME=$(hostname)
-
 function Add-ToLogFile () {
   param (
     [string]$Content
@@ -34,7 +31,11 @@ if ($output.Events.Length -gt 0) {
 
       # Send SMS notification to administrators
       Add-ToLogFile -Content "Sending SMS notifications."
-      Start-Job -ScriptBlock { & $NOTIFIER_CLI eviction $HOSTNAME }
+      Start-Job -ScriptBlock { 
+        $NOTIFIER_CLI="C:\Users\jpfulton\AppData\Local\Yarn\bin\sms-notify-cli.cmd"
+        $HOSTNAME=$(hostname)
+        & $NOTIFIER_CLI eviction $HOSTNAME 
+      }
 
       # Message logged in users
       Add-ToLogFile -Content "Messaging logged in users."
