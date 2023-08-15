@@ -58,10 +58,11 @@ try {
         }
 
         # wait on background jobs
+        Add-ToLogFile -Content "Waiting on background tasks."
         Wait-Job -Job @($smsJob, $msgJob, $eventLogJob)
 
         # Initiate shutdown
-        Add-ToLogFile -Content "Shutting down."
+        Add-ToLogFile -Content "Background tasks complete. Shutting down..."
         Stop-Computer -Force
       }
     }
