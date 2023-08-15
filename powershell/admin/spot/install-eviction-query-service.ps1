@@ -24,6 +24,7 @@ if ($existingService) {
   sc.exe delete "${SERVICE_NAME}"
 }
 
+Remove-Item -Force $SERVICE_INSTALL_DIR -ErrorAction SilentlyContinue -Recurse
 Remove-Item -Force "$env:TEMP\${SERVICE_ARCHIVE_NAME}" -ErrorAction SilentlyContinue
 Remove-Item -Force "$env:TEMP\${SCRIPT_NAME}" -ErrorAction SilentlyContinue
 
