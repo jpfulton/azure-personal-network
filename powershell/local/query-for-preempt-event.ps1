@@ -38,7 +38,7 @@ if ($output.Events.Length -gt 0) {
 
       # Message logged in users
       Add-ToLogFile -Content "Messaging logged in users."
-      msg * "Azure spot instance eviction detected. Gracefull shutdown starting..." &
+      msg * "Azure spot instance eviction detected. Graceful shutdown starting..." &
 
       # Write eviction discovery to system event log
       Add-ToLogFile -Content "Writing to event log."
