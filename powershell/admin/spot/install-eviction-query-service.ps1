@@ -3,7 +3,7 @@ $ProgressPreference = 'SilentlyContinue'
 
 $SERVICE_NAME="Azure Spot Instance Eviction Service"
 
-$SERVICE_VERSION="v0.0.13"
+$SERVICE_VERSION="v1.0.1"
 $SERVICE_ARCHIVE_NAME="binaries-win-x64-${SERVICE_VERSION}.zip"
 $SERVICE_URL="https://github.com/jpfulton/short-interval-scheduler-service/releases/download/${SERVICE_VERSION}/${SERVICE_ARCHIVE_NAME}"
 
