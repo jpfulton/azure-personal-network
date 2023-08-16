@@ -27,7 +27,7 @@ tag-vm () {
   echo "Tagging virtual machine...";
 
   local VM_ID=$(az-get-vm-resource-id $RESOURCE_GROUP $SERVER_NAME);
-  az-add-tag-to-resource $VM_ID "AttemptRestartAfterEviction=true";
+  az-add-tag-to-resource $VM_ID "AttemptRestartAfterEviction=false";
 
   echo "---";
   echo;

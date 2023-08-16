@@ -31,10 +31,28 @@ check-signed-in-user () {
   echo;
 }
 
-az-add-tag-to-resource () {
+az-get-vm-resource-id () {
   if [ "$#" -ne 2 ]
     then
       echo "ERROR: az-add-tag function requires 2 arguments. Exiting...";
+      echo "INFO:  Required argument one: resource group";
+      echo "INFO:  Required argument two: vm name";
+      echo;
+
+      exit 1;
+  fi
+
+  local RESOURCE_GROUP="$1";
+  local VM_NAME="$2";
+
+  local VM_ID=$(az vm list --resource-group $RESOURCE_GROUP --query "[?name=='${VM_NAME}'].id" -o tsv);
+  echo $VM_ID;
+}
+
+az-add-tag-to-resource () {
+  if [ "$#" -ne 2 ]
+    then
+      echo "ERROR: az-add-tag-to-resource function requires 2 arguments. Exiting...";
       echo "INFO:  Required argument one: resource ID";
       echo "INFO:  Required argument two: Tag key/value pair";
       echo;
