@@ -35,7 +35,7 @@ param adminUsername string = 'jpfulton'
 @secure()
 param adminPassword string
 
-module nicModule 'modules/win-server/nic.bicep' = {
+module nicModule 'modules/nic.bicep' = {
   name: 'nic-deploy'
   params: {
     location: location

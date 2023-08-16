@@ -15,11 +15,11 @@ Templates are available for both bug reports and feature requests.
 
 To get started:
 
-**Step 1: Fork this repo**
+#### Step 1: Fork this repo
 
 Fork by clicking [here](https://github.com/jpfulton/azure-personal-network/fork).
 
-**Step 2: Clone your fork and open in VSCode**
+#### Step 2: Clone your fork and open in VSCode
 
 ```sh
 git clone <your fork>

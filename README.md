@@ -37,7 +37,7 @@ brew update && brew install --cask powershell
 Install the sshpass utility:
 
 ```bash
-cd deps
+cd dependencies
 ./install-sshpass.sh
 ```
 
