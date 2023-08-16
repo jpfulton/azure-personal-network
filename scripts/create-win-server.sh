@@ -308,6 +308,20 @@ ps-install-sms-notifier () {
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
+scp-notifier-config () {
+  echo "Copying SMS Nofifier config...";
+
+  local NOTIFIER_CONFIG="/etc/sms-notifier/notifier.json"
+  local REMOTE_LOCATION="/C:/ProgramData/sms-notifier/notifier.json"
+
+  if [ -f $NOTIFIER_CONFIG ]
+    then
+      scp $NOTIFIER_CONFIG ${ADMIN_USERNAME}@${SERVER_FQDN}:${REMOTE_LOCATION};
+    else
+      echo "WARN: Manual installation of notifier config will be required.";
+  fi
+}
+
 run-ps-install-dotnet-7 () {
   echo "Installing .NET 7 runtime...";
 
@@ -406,6 +420,7 @@ main () {
   if [ "$IS_SPOT" = "true" ]
     then
       ps-install-sms-notifier;
+      scp-notifier-config;
       run-ps-install-spot-eviction-service;
 
       if [ "$SPOT_RESTART" = "true" ]
