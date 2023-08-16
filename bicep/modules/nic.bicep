@@ -21,11 +21,11 @@ param vnetName string
 param subnetName string = 'default'
 
 var publicIpAddressName = '${serverName}-public-ip'
-var publicIPAddressType = 'Dynamic'
+var publicIPAddressType = 'Static'
 
 resource publicIp 'Microsoft.Network/publicIPAddresses@2021-03-01' = {
   sku: {
-    name: 'Basic'
+    name: 'Standard'
   }
   name: publicIpAddressName
   location: location
