@@ -18,7 +18,6 @@ print-usage () {
   echo "Usage: ${0} [options] [resource-group] [server-name]";
   echo;
   echo "Options:";
-  echo "  -s,--no-ssh:            Disable SSH installation.";
   echo "  -n,--no-nla:            Disable NLA disable script.";
   echo "  -w,--no-wsl:            Disable WSL installation.";
   echo "  -u,--no-windows-update: Disable Windows Update configuration and run.";
@@ -124,6 +123,18 @@ get-user-inputs () {
     then
       echo "Spot instance prompt must be either true or false. Exiting...";
       exit 1;
+  fi
+
+  if [ "$IS_SPOT" = true ]
+    then
+      read -p "Tag for restart after eviction (true/false)[true]: " SPOT_RESTART;
+      SPOT_RESTART=${SPOT_RESTART:-true};
+
+      if [ ! "$SPOT_RESTART" = "true" ] && [ ! "$SPOT_RESTART" = "false" ]
+        then
+          echo "Spot instance restart prompt must be either true or false. Exiting...";
+          exit 1;
+      fi
   fi
 
   read -p "Enter an admin account username [jpfulton]: " ADMIN_USERNAME;
@@ -396,6 +407,14 @@ main () {
     then
       ps-install-sms-notifier;
       run-ps-install-spot-eviction-service;
+
+      if [ "$SPOT_RESTART" = "true" ]
+        then
+          echo "Tagging VM for restart after eviction...";
+
+          local VM_ID=$(az-get-vm-resource-id $RESOURCE_GROUP $SERVER_NAME);
+          az-add-tag-to-resource $VM_ID "AttemptRestartAfterEviction=true";
+      fi
   fi
 
   if [ "$NO_WSL" -eq 0 ]
