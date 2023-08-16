@@ -290,10 +290,24 @@ run-ps-install-yarn () {
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
+ps-install-sms-notifier () {
+  echo "Installing SMS Notifier CLI...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/spot/install-sms-notifier.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
 run-ps-install-dotnet-7 () {
   echo "Installing .NET 7 runtime...";
 
   local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/general/install-dotnet-7.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+}
+
+run-ps-install-spot-eviction-service () {
+  echo "Installing Spot Instance Eviction Service...";
+
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/spot/install-eviction-query-service.ps1";
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
@@ -377,6 +391,12 @@ main () {
 
   # install .NET 7 runtime
   run-ps-install-dotnet-7;
+
+  if [ "$IS_SPOT" = "true" ]
+    then
+      ps-install-sms-notifier;
+      run-ps-install-spot-eviction-service;
+  fi
 
   if [ "$NO_WSL" -eq 0 ]
     then
