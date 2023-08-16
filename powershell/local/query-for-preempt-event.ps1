@@ -43,7 +43,7 @@ try {
         # Message logged in users
         Add-ToLogFile -Content "Messaging logged in users."
         $msgJob = Start-Job -ScriptBlock { 
-          msg * "Azure spot instance eviction detected. Graceful shutdown starting..." 
+          msg * /time:3 "Azure spot instance eviction detected. Graceful shutdown starting..." 
         }
 
         # Write eviction discovery to system event log
