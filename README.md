@@ -1,5 +1,7 @@
 # azure-personal-network
 
+![License](https://img.shields.io/badge/License-MIT-blue)
+
 A collection of
 [Bicep](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview?tabs=bicep)
 templates,
