@@ -8,9 +8,6 @@ echo;
 # Import library functions
 source ${CURRENT_SCRIPT_DIR}lib/azure-cli-functions.sh;
 
-# Set remote execution PS script
-REMOTE_EXECUTION_PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/run-file-on-remote-server.ps1";
-
 print-usage () {
   echo "Usage: ${0} [options] [resource-group] [server-name]";
   echo;
