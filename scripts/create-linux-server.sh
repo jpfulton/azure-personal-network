@@ -7,7 +7,6 @@ echo;
 
 # Import library functions
 source ${CURRENT_SCRIPT_DIR}lib/azure-cli-functions.sh;
-source ${CURRENT_SCRIPT_DIR}lib/sshpass-functions.sh;
 
 # Set remote execution PS script
 REMOTE_EXECUTION_PS_FILE="${CURRENT_SCRIPT_DIR}../powershell/admin/run-file-on-remote-server.ps1";
@@ -257,7 +256,6 @@ scp-notifier-config () {
 
 main () {
   validate-az-cli-install;
-  validate-sshpass-install;
 
   # parse script inputs and gather user inputs
   parse-script-inputs $@;
