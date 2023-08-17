@@ -1,5 +1,4 @@
 @description('Server name for the virtual machine.')
-@maxLength(15)
 param serverName string
 
 @description('Region for the resources. Allowed values include US regions.')
@@ -21,11 +20,11 @@ param vnetName string
 param subnetName string = 'default'
 
 var publicIpAddressName = '${serverName}-public-ip'
-var publicIPAddressType = 'Dynamic'
+var publicIPAddressType = 'Static'
 
 resource publicIp 'Microsoft.Network/publicIPAddresses@2021-03-01' = {
   sku: {
-    name: 'Basic'
+    name: 'Standard'
   }
   name: publicIpAddressName
   location: location
