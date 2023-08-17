@@ -1,5 +1,4 @@
 @description('Server name for the virtual machine.')
-@maxLength(15)
 param serverName string
 
 @description('Region for the resources. Allowed values include US regions.')
