@@ -250,14 +250,6 @@ scp-notifier-config () {
     else
       echo "WARN: Manual installation of notifier config will be required.";
   fi
-}
-
-restart-vm () {
-  echo "Restarting VM to allow settings to take effect...";
-
-  az vm restart \
-    -g $RESOURCE_GROUP \
-    -n $SERVER_NAME;
 
   echo "---";
   echo;
