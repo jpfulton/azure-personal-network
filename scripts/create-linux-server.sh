@@ -250,14 +250,6 @@ scp-notifier-config () {
     else
       echo "WARN: Manual installation of notifier config will be required.";
   fi
-}
-
-restart-vm () {
-  echo "Restarting VM to allow settings to take effect...";
-
-  az vm restart \
-    -g $RESOURCE_GROUP \
-    -n $SERVER_NAME;
 
   echo "---";
   echo;
@@ -281,24 +273,25 @@ main () {
   login-to-admin-acct;
 
   # copy setup scripts to server
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/update-base-packages.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/setup-firewall.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/setup-motd.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/setup-node-and-yarn.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/setup-sms-notifier.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/setup-eviction-shutdown-system.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/update-notifier-config.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/clean-up.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/core/update-base-packages.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/core/setup-firewall.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/core/setup-motd.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/core/setup-node-and-yarn.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/spot/setup-sms-notifier.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/spot/setup-eviction-shutdown-system.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/spot/update-notifier-config.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/core/clean-up.sh;
 
   # execute remote setup scripts
+  echo "Executing base platform setup scripts...";
   run-script-from-admin-home update-base-packages.sh;
   run-script-from-admin-home setup-firewall.sh;
   run-script-from-admin-home setup-motd.sh;
   run-script-from-admin-home setup-node-and-yarn.sh;
   
-
   if [ "$IS_SPOT" = "true" ]
     then
+      echo "Executing spot instance setup scripts...";
       run-script-from-admin-home setup-sms-notifier.sh;
       scp-notifier-config;
       run-script-from-admin-home setup-eviction-shutdown-system.sh;
