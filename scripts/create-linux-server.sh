@@ -291,6 +291,7 @@ main () {
   scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/core/clean-up.sh;
 
   # execute remote setup scripts
+  echo "Executing base platform setup scripts...";
   run-script-from-admin-home update-base-packages.sh;
   run-script-from-admin-home setup-firewall.sh;
   run-script-from-admin-home setup-motd.sh;
@@ -298,6 +299,7 @@ main () {
   
   if [ "$IS_SPOT" = "true" ]
     then
+      echo "Executing spot instance setup scripts...";
       run-script-from-admin-home setup-sms-notifier.sh;
       scp-notifier-config;
       run-script-from-admin-home setup-eviction-shutdown-system.sh;
