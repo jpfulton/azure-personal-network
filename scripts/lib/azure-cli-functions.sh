@@ -70,3 +70,24 @@ az-add-tag-to-resource () {
   echo;
 }
 
+az-create-resource-group () {
+  if [ "$#" -ne 2 ]
+    then
+      echo "ERROR: az-create-resource-group function requires two arguments. Exiting...";
+      echo "INFO:  Required argument one: resource group name";
+      echo "INFO:  Required argument two: resource group location";
+      echo;
+
+      exit 1;
+  fi
+
+  local RG_NAME="$1";
+  local LOCATION="$2";
+
+  if [ $(az group exists --name $RG_NAME ) = false ]
+    then
+      az group create --name $RG_NAME --location $LOCATION;
+    else
+      echo "WARN: Resource group (${RG_NAME}) exists. Continuing...";
+  fi
+}
