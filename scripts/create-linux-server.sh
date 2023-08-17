@@ -234,6 +234,24 @@ run-script-from-admin-home () {
   echo;
 }
 
+scp-notifier-config () {
+  echo "Copying SMS Nofifier config...";
+
+  local NOTIFIER_CONFIG="/etc/sms-notifier/notifier.json"
+  local REMOTE_LOCATION="~/"
+
+  if [ -f $NOTIFIER_CONFIG ]
+    then
+      scp -i $ADMIN_PRIVATE_KEY_FILE \
+        $NOTIFIER_CONFIG \
+        ${ADMIN_USERNAME}@${SERVER_FQDN}:${REMOTE_LOCATION};
+
+      run-script-from-admin-home update-notifier-config.sh;
+    else
+      echo "WARN: Manual installation of notifier config will be required.";
+  fi
+}
+
 restart-vm () {
   echo "Restarting VM to allow settings to take effect...";
 
@@ -264,9 +282,37 @@ main () {
 
   # copy setup scripts to server
   scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/update-base-packages.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/setup-firewall.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/setup-motd.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/setup-node-and-yarn.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/setup-sms-notifier.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/setup-eviction-shutdown-system.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/update-notifier-config.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/clean-up.sh;
 
   # execute remote setup scripts
   run-script-from-admin-home update-base-packages.sh;
+  run-script-from-admin-home setup-firewall.sh;
+  run-script-from-admin-home setup-motd.sh;
+  run-script-from-admin-home setup-node-and-yarn.sh;
+  
+
+  if [ "$IS_SPOT" = "true" ]
+    then
+      run-script-from-admin-home setup-sms-notifier.sh;
+      scp-notifier-config;
+      run-script-from-admin-home setup-eviction-shutdown-system.sh;
+
+      if [ "$SPOT_RESTART" = "true" ]
+        then
+          echo "Tagging VM for restart after eviction...";
+
+          local VM_ID=$(az-get-vm-resource-id $RESOURCE_GROUP $SERVER_NAME);
+          az-add-tag-to-resource $VM_ID "AttemptRestartAfterEviction=true";
+      fi
+  fi
+
+  run-script-from-admin-home clean-up.sh;
 
   echo "---";
   echo "Done.";
