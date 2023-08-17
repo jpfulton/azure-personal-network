@@ -172,6 +172,68 @@ deploy () {
   echo;
 }
 
+login-to-admin-acct () {
+  echo "Logging into to admin account and recording host key...";
+
+  ssh -i $ADMIN_PRIVATE_KEY_FILE \
+    -o StrictHostKeyChecking=accept-new \
+    ${ADMIN_USERNAME}@${SERVER_FQDN} \
+    sleep 1;
+
+  echo "---";
+  echo;
+}
+
+scp-file-to-admin-home () {
+  if [ "$#" -ne 1 ]
+    then
+      echo "ERROR: scp-file-to-admin-home function requires one argument. Exiting...";
+      echo "INFO:  Required argument one: Path to file to copy.";
+      echo;
+
+      exit 1;
+  fi
+
+  local FILE="$1";
+
+  if [ ! -f $FILE ]
+    then
+      echo "Cannot find file: ${FILE} Exiting...";
+      exit 1;
+  fi
+
+  echo "SCPing ${FILE} to remote admin home folder...";
+  scp \
+    -i $ADMIN_PRIVATE_KEY_FILE \
+    $FILE \
+    ${ADMIN_USERNAME}@${SERVER_FQDN}:~/;
+
+  echo "---";
+  echo;
+}
+
+run-script-from-admin-home () {
+  if [ "$#" -ne 1 ]
+    then
+      echo "ERROR: exec-script-as-sudo-from-admin-home function requires one argument. Exiting...";
+      echo "INFO:  Required argument one: Path to file to copy.";
+      echo;
+
+      exit 1;
+  fi
+
+  local SCRIPT="$1";
+
+  echo "Executing remote script: ${SCRIPT}...";
+
+  ssh -i $ADMIN_PRIVATE_KEY_FILE \
+    ${ADMIN_USERNAME}@${SERVER_FQDN} \
+    "./${SCRIPT}";
+
+  echo "---";
+  echo;
+}
+
 restart-vm () {
   echo "Restarting VM to allow settings to take effect...";
 
@@ -196,6 +258,15 @@ main () {
 
   # deploy bicep template
   deploy;
+
+  # log into admin account and record host key
+  login-to-admin-acct;
+
+  # copy setup scripts to server
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/update-base-packages.sh;
+
+  # execute remote setup scripts
+  run-script-from-admin-home update-base-packages.sh;
 
   echo "---";
   echo "Done.";
