@@ -27,7 +27,7 @@ parse-script-inputs () {
   fi
 
   SCRIPT_NAME=$(basename "$0");
-  OPTIONS=$(getopt --options o --long openvpn --name "$SCRIPT_NAME" -- "$@");
+  OPTIONS=$(getopt --options os --long allow-ssh,openvpn --name "$SCRIPT_NAME" -- "$@");
   if [ $? -ne 0 ]
     then
       echo "Incorrect options.";
@@ -35,6 +35,7 @@ parse-script-inputs () {
       exit 1;
   fi
 
+  ALLOW_SSH_RULE=0;
   OPENVPN=0;
 
   eval set -- "$OPTIONS";
@@ -44,12 +45,19 @@ parse-script-inputs () {
     case "$1" in
       -o|--openvpn)
         OPENVPN=1; shift ;;
+      -s|--allow-ssh)
+        ALLOW_SSH_RULE=1; shift ;;
       --) 
         shift; ;;
       *) 
         break ;;
     esac
   done
+
+  if [ "$ALLOW_SSH_RULE" -eq 1 ]
+    then
+      echo "Enabling inbound SSH NSG rule.";
+  fi
 
   if [ "$OPENVPN" -eq 1 ]
     then
@@ -75,8 +83,17 @@ parse-script-inputs () {
 }
 
 get-user-inputs () {
-  read -p "Enter a private DNS zone name [private.jpatrickfulton.com]: " PRIVATE_DNS_ZONE;
-  PRIVATE_DNS_ZONE=${PRIVATE_DNS_ZONE:-private.jpatrickfulton.com};
+  if [ "$ALLOW_SSH_RULE" -eq 0 ]
+    then
+      # we only need this prompt if public SSH access is not enabled during install
+      read -p "Enter a private DNS zone name [private.jpatrickfulton.com]: " PRIVATE_DNS_ZONE;
+      PRIVATE_DNS_ZONE=${PRIVATE_DNS_ZONE:-private.jpatrickfulton.com};
+
+      SERVER_FQDN="${SERVER_NAME}.${PRIVATE_DNS_ZONE}";
+    else
+      # this variable will be reset after the deployment
+      SERVER_FQDN="Public IP will be used after deployment.";
+  fi
 
   read -p "Enter a vm size [Standard_DS1_v2]: " VM_SIZE;
   VM_SIZE=${VM_SIZE:-Standard_DS1_v2};
@@ -123,8 +140,6 @@ get-user-inputs () {
       exit 1;
   fi
 
-  SERVER_FQDN="${SERVER_NAME}.${PRIVATE_DNS_ZONE}";
-
   echo;
   echo;
   echo "---";
@@ -151,9 +166,18 @@ deploy () {
   export ADMIN_USERNAME="$ADMIN_USERNAME";
   export ADMIN_PUBLIC_KEY="$(cat $ADMIN_PUBLIC_KEY_FILE)";
 
+  if [ "$ALLOW_SSH_RULE" -eq 1 ]
+    then
+      export ALLOW_SSH="true";
+  fi
+
   local TEMPLATE_FILE="${CURRENT_SCRIPT_DIR}../bicep/linux-server.bicep";
   local PARAM_FILE="${CURRENT_SCRIPT_DIR}../bicep/linux-server.bicepparam";
+
+  local DEPLOYMENT_NAME=$(uuidgen);
+
   az deployment group create \
+    --name $DEPLOYMENT_NAME \
     --resource-group $RESOURCE_GROUP \
     --template-file $TEMPLATE_FILE \
     --parameters $PARAM_FILE;
@@ -162,6 +186,22 @@ deploy () {
     then
       echo "Deployment failed. Exiting.";
       exit 1;
+  fi
+
+  if [ "$ALLOW_SSH_RULE" -eq 1 ]
+    then
+      echo "Allow public SSH rule was configured. Getting public IP for use in next steps...";
+
+      local PUBLIC_IP=$(az deployment group show \
+        -g $RESOURCE_GROUP \
+        -n $DEPLOYMENT_NAME \
+        --query properties.outputs.publicIp.value -o tsv);
+
+      echo "Public IP is: $PUBLIC_IP";
+      echo;
+
+      # Replace SERVER_FQDN with public IP for future steps
+      SERVER_FQDN="$PUBLIC_IP";
   fi
 
   echo "---";
