@@ -41,6 +41,9 @@ param adminPublicKeyData string
 @description('Create allow SSH inbound NSG rule.')
 param allowSsh bool = false
 
+@description('Create an inbound allow OpenVPN rule.')
+param allowOpenVpn bool = false
+
 module nicModule 'modules/nic.bicep' = {
   name: 'nic-deploy'
   params: {
@@ -48,6 +51,7 @@ module nicModule 'modules/nic.bicep' = {
     serverName: serverName
     vnetName: vnetName
     allowSsh: allowSsh
+    allowOpenVpn: allowOpenVpn
   }
 }
 

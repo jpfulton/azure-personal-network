@@ -171,6 +171,11 @@ deploy () {
       export ALLOW_SSH="true";
   fi
 
+  if [ "$OPENVPN" -eq 1 ]
+    then
+      export ALLOW_OPENVPN="true";
+  fi
+
   local TEMPLATE_FILE="${CURRENT_SCRIPT_DIR}../bicep/linux-server.bicep";
   local PARAM_FILE="${CURRENT_SCRIPT_DIR}../bicep/linux-server.bicepparam";
 

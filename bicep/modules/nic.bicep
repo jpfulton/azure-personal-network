@@ -22,6 +22,9 @@ param subnetName string = 'default'
 @description('Create an inbound allow SSH rule.')
 param allowSsh bool = false
 
+@description('Create an inbound allow OpenVPN rule.')
+param allowOpenVpn bool = false
+
 var publicIpAddressName = '${serverName}-public-ip'
 var publicIPAddressType = 'Static'
 
@@ -67,6 +70,26 @@ resource nsgRuleAllowSsh 'Microsoft.Network/networkSecurityGroups/securityRules@
   ]
 }
 
+var nsgOpenVpnRuleName = '${networkSecurityGroupName}/AllowOpenVpn'
+
+resource nsgRuleAllowOpenVpn 'Microsoft.Network/networkSecurityGroups/securityRules@2023-04-01' = if (allowOpenVpn) {
+  name: nsgOpenVpnRuleName
+  properties: {
+    access: 'Allow'
+    direction: 'Inbound'
+    priority: 200
+    protocol: 'Udp'
+    description: 'Allow OpenVpn Inbound'
+    sourceAddressPrefix: '*'
+    sourcePortRange: '*'
+    destinationAddressPrefix: '*'
+    destinationPortRange: '1194'
+  }
+  dependsOn: [
+    nsg
+  ]
+}
+
 var networkInterfaceName = '${serverName}-nic'
 
 resource nic 'Microsoft.Network/networkInterfaces@2021-03-01' = {
@@ -100,5 +123,5 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-03-01' = {
 @description('The id of the nic resource.')
 output nicId string = nic.id
 
-@description('FQDN assocated with the NIC.')
+@description('Public IP assocated with the NIC.')
 output publicIp string = publicIp.properties.ipAddress
