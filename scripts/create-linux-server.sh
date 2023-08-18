@@ -12,6 +12,8 @@ print-usage () {
   echo "Usage: ${0} [options] [resource-group] [server-name]";
   echo;
   echo "Options:";
+  echo "  -o,--openvpn:     Enable OpenVPN Server installation.";
+  echo "  -s,--allow-ssh:   Enable installation over SSH on public IP.";
   echo "---";
   echo;
 }
@@ -188,7 +190,7 @@ deploy () {
   local TEMPLATE_FILE="${CURRENT_SCRIPT_DIR}../bicep/linux-server.bicep";
   local PARAM_FILE="${CURRENT_SCRIPT_DIR}../bicep/linux-server.bicepparam";
 
-  local DEPLOYMENT_NAME=$(uuidgen);
+  DEPLOYMENT_NAME=$(uuidgen);
 
   az deployment group create \
     --name $DEPLOYMENT_NAME \
@@ -360,16 +362,19 @@ main () {
       scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/install-openvpn-and-deps.sh;
       scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/create-server-certificates.sh;
       scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/configure-openvpn-server.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/create-client-config.sh;
 
       echo "Executing OpenVPN setup scripts...";
       run-script-from-admin-home install-openvpn-and-deps.sh;
       run-script-from-admin-home create-server-certificates.sh;
       run-script-from-admin-home "configure-openvpn-server.sh ${VNET_ADDRESS_SPACE} ${VPN_SUBNET} ${PUBLIC_IP}";
+      run-script-from-admin-home "create-client-config.sh personal-network-client ${PUBLIC_IP}";
   fi
 
-  run-script-from-admin-home clean-up.sh;
+  #run-script-from-admin-home clean-up.sh;
 
   echo "Server public IP: $PUBLIC_IP";
+  echo "Deployment name: $DEPLOYMENT_NAME";
   echo;
 
   echo "---";
