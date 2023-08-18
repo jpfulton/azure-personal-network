@@ -193,17 +193,17 @@ deploy () {
       exit 1;
   fi
 
+  PUBLIC_IP=$(az deployment group show \
+    -g $RESOURCE_GROUP \
+    -n $DEPLOYMENT_NAME \
+    --query properties.outputs.publicIp.value -o tsv);
+
+  echo "Public IP is: $PUBLIC_IP";
+  echo;
+
   if [ "$ALLOW_SSH_RULE" -eq 1 ]
     then
-      echo "Allow public SSH rule was configured. Getting public IP for use in next steps...";
-
-      local PUBLIC_IP=$(az deployment group show \
-        -g $RESOURCE_GROUP \
-        -n $DEPLOYMENT_NAME \
-        --query properties.outputs.publicIp.value -o tsv);
-
-      echo "Public IP is: $PUBLIC_IP";
-      echo;
+      echo "Allow public SSH rule was configured. Using public IP for next steps...";
 
       # Replace SERVER_FQDN with public IP for future steps
       SERVER_FQDN="$PUBLIC_IP";
@@ -328,12 +328,12 @@ main () {
   run-script-from-admin-home setup-firewall.sh;
   run-script-from-admin-home setup-motd.sh;
   run-script-from-admin-home setup-node-and-yarn.sh;
+  run-script-from-admin-home setup-sms-notifier.sh;
+  scp-notifier-config;
   
   if [ "$IS_SPOT" = "true" ]
     then
       echo "Executing spot instance setup scripts...";
-      run-script-from-admin-home setup-sms-notifier.sh;
-      scp-notifier-config;
       run-script-from-admin-home setup-eviction-shutdown-system.sh;
 
       if [ "$SPOT_RESTART" = "true" ]
@@ -345,7 +345,19 @@ main () {
       fi
   fi
 
+  if [ "$OPENVPN" -eq 1 ]
+    then
+      echo "Copying OpenVPN setup scripts to server...";
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/install-openvpn-and-deps.sh;
+
+      echo "Executing OpenVPN setup scripts...";
+      run-script-from-admin-home install-openvpn-and-deps.sh;
+  fi
+
   run-script-from-admin-home clean-up.sh;
+
+  echo "Server public IP: $PUBLIC_IP";
+  echo;
 
   echo "---";
   echo "Done.";
