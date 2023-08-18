@@ -106,9 +106,16 @@ generate-client-configuration-file () {
   echo "WARN: It contains a private key and a pre-shared secret.";
 }
 
+add-cn-to-allowed-clients-file () {
+  local ALLOWED_CLIENTS_FILE="/etc/openvpn/allowed_clients";
+
+  sudo echo $CLIENT_CERT_CN | sudo tee $ALLOWED_CLIENTS_FILE > /dev/null;
+}
+
 main () {
   generate-client-certificate;
   generate-client-configuration-file;
+  add-cn-to-allowed-clients-file;
 
   echo "---";
   echo;

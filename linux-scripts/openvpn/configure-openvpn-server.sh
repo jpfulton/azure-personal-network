@@ -59,6 +59,12 @@ setup-openvpn-support-scripts () {
   fi
 }
 
+setup-allowed-clients-file () {
+  local ALLOWED_CLIENTS_FILE="/etc/openvpn/allowed_clients";
+  sudo touch $ALLOWED_CLIENTS_FILE;
+  sudo echo "# Allowed Client Certificate CNs" | sudo tee $ALLOWED_CLIENTS_FILE > /dev/null;
+}
+
 create-server-config-and-start () {
   local OPENVPN_DIR="/etc/openvpn/";
   local BASE_SERVER_CONFIG="base-server-config.conf";
@@ -111,6 +117,7 @@ COMMIT
   sudo ufw --force enable;
 }
 
+setup-allowed-clients-file;
 setup-openvpn-support-scripts;
 create-server-config-and-start;
 configure-firewall;
