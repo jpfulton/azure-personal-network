@@ -119,6 +119,15 @@ get-user-inputs () {
       fi
   fi
 
+  if [ "$OPENVPN" -eq 1 ]
+    then
+      read -p "Enter the virtual network address space [10.1.0.0]: " VNET_ADDRESS_SPACE;
+      VNET_ADDRESS_SPACE=${VNET_ADDRESS_SPACE:-"10.1.0.0"};
+
+      read -p "Enter a subnet for VPN clients [10.1.10.0]: " VPN_SUBNET;
+      VPN_SUBNET=${VPN_SUBNET:-"10.1.10.0"};
+  fi
+
   read -p "Enter an admin account username [jpfulton]: " ADMIN_USERNAME;
   ADMIN_USERNAME=${ADMIN_USERNAME:-jpfulton};
 
@@ -256,8 +265,8 @@ scp-file-to-admin-home () {
 run-script-from-admin-home () {
   if [ "$#" -ne 1 ]
     then
-      echo "ERROR: exec-script-as-sudo-from-admin-home function requires one argument. Exiting...";
-      echo "INFO:  Required argument one: Path to file to copy.";
+      echo "ERROR: run-script-from-admin-home function requires one argument. Exiting...";
+      echo "INFO:  Required argument one: Script to execute.";
       echo;
 
       exit 1;
@@ -349,9 +358,13 @@ main () {
     then
       echo "Copying OpenVPN setup scripts to server...";
       scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/install-openvpn-and-deps.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/create-server-certificates.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/configure-openvpn-server.sh;
 
       echo "Executing OpenVPN setup scripts...";
       run-script-from-admin-home install-openvpn-and-deps.sh;
+      run-script-from-admin-home create-server-certificates.sh;
+      run-script-from-admin-home "configure-openvpn-server.sh ${VNET_ADDRESS_SPACE} ${VPN_SUBNET} ${PUBLIC_IP}";
   fi
 
   run-script-from-admin-home clean-up.sh;
