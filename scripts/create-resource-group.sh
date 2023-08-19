@@ -46,16 +46,19 @@ parse-script-inputs () {
 
 add-current-user-to-vm-admin-role () {
   local MY_AD_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv);
-  local SUBCRIPTION_ID=$(az account show --query id -o tsv);
+  local SUBSCRIPTION_ID=$(az account show --query id -o tsv);
   local SCOPE="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}";
   local ROLE="Virtual Machine Administrator Login";
 
+  echo "Using user object id: $MY_AD_OBJECT_ID";
+  echo "Using scope: $SCOPE";
+  echo "Using role: $ROLE";
+  echo;
+
   az role assignment create \
-    --assignee-object-id $MY_AD_OBJECT_ID \ 
-    --assignee-principal-type User \
+    --assignee $MY_AD_OBJECT_ID \
     --role "$ROLE" \
-    --scope "$SCOPE" \ 
-    --resource-group $RESOURCE_GROUP_NAME;
+    --scope "$SCOPE";
 }
 
 main () {
