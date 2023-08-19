@@ -109,7 +109,7 @@ generate-client-configuration-file () {
 add-cn-to-allowed-clients-file () {
   local ALLOWED_CLIENTS_FILE="/etc/openvpn/allowed_clients";
 
-  sudo echo $CLIENT_CERT_CN | sudo tee $ALLOWED_CLIENTS_FILE > /dev/null;
+  sudo echo $CLIENT_CERT_CN | sudo tee -a $ALLOWED_CLIENTS_FILE > /dev/null;
 }
 
 main () {
