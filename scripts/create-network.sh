@@ -47,7 +47,7 @@ get-user-inputs () {
   read -p "Enter a virtual network address space [10.1.0.0/16]: " ADDRESS_SPACE;
   ADDRESS_SPACE=${ADDRESS_SPACE:-"10.1.0.0/16"};
 
-  read -p "Enter a virtual network address space [10.1.0.0/24]: " SUBNET_ADDRESS_SPACE;
+  read -p "Enter a default subnet address space [10.1.0.0/24]: " SUBNET_ADDRESS_SPACE;
   SUBNET_ADDRESS_SPACE=${SUBNET_ADDRESS_SPACE:-"10.1.0.0/24"};
 
   echo;
