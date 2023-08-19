@@ -51,9 +51,11 @@ delete-nsg () {
 remove-keys-from-known-hosts () {
   echo "Removing public keys from local known hosts file for deleted server...";
 
+  local DATE=$(date "+%Y-%m-%d-%H%M%S");
+  local BACKUP_EXT=".backup-${DATE}";
+
   # Remove lines starting with servername from known hosts file
-  FILE_CONTENTS=$(grep -v --line-buffered "^${SERVER_NAME}" ~/.ssh/known_hosts);
-  echo $FILE_CONTENTS > ~/.ssh/known_hosts;
+  sed -I $BACKUP_EXT "/^${SERVER_NAME}/d" ~/.ssh/known_hosts;
 
   echo "---";
   echo;
