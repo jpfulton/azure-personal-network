@@ -333,6 +333,21 @@ scp-to-deployment-outputs-dir () {
         ${DEPLOYMENT_OUTPUTS_DIR}/;
 }
 
+az-remove-allow-ssh-nsg-rule () {
+  echo "Removing NSG Allow SSH rule...";
+
+  local NSG_NAME="${SERVER_NAME}-nsg";
+  local RULE_NAME="AllowSsh";
+
+  az network nsg rule delete \
+    -g $RESOURCE_GROUP \
+    --nsg-name $NSG_NAME \
+    -n $RULE_NAME;
+
+  echo "---";
+  echo;
+}
+
 main () {
   validate-az-cli-install;
 
@@ -404,6 +419,14 @@ main () {
   fi
 
   run-script-from-admin-home clean-up.sh;
+
+  if [ "$OPENVPN" -eq 1 ] && [ "$ALLOW_SSH_RULE" -eq 1 ];
+    then
+      echo "OpenVPN was sucessfully installed over the open SSH port.";
+      echo "Closing SSH port in the server NSG. Future access should be performed over the VPN tunnel.";
+      
+      az-remove-allow-ssh-nsg-rule;
+  fi
 
   echo;
   echo "---";
