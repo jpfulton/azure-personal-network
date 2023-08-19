@@ -307,6 +307,32 @@ scp-notifier-config () {
   echo;
 }
 
+create-local-deployment-outputs-dir () {
+  DEPLOYMENT_OUTPUTS_DIR=~/deployment-outputs-${DEPLOYMENT_NAME};
+
+  if [ ! -d $DEPLOYMENT_OUTPUTS_DIR ];
+    then
+      mkdir $DEPLOYMENT_OUTPUTS_DIR;
+  fi
+}
+
+scp-to-deployment-outputs-dir () {
+  if [ "$#" -ne 1 ]
+    then
+      echo "ERROR: scp-to-deployment-outputs-dir function requires one argument. Exiting...";
+      echo "INFO:  Required argument one: File to scp to outputs directory.";
+      echo;
+
+      exit 1;
+  fi
+
+  local REMOTE_FILE="$1";
+
+  scp -i $ADMIN_PRIVATE_KEY_FILE \
+        ${ADMIN_USERNAME}@${SERVER_FQDN}:${REMOTE_FILE} \
+        ${DEPLOYMENT_OUTPUTS_DIR}/;
+}
+
 main () {
   validate-az-cli-install;
 
@@ -319,6 +345,9 @@ main () {
 
   # deploy bicep template
   deploy;
+
+  # create outputs directory
+  create-local-deployment-outputs-dir;
 
   # log into admin account and record host key
   login-to-admin-acct;
@@ -369,12 +398,16 @@ main () {
       run-script-from-admin-home create-server-certificates.sh;
       run-script-from-admin-home "configure-openvpn-server.sh ${VNET_ADDRESS_SPACE} ${VPN_SUBNET} ${PUBLIC_IP}";
       run-script-from-admin-home "create-client-config.sh personal-network-client ${PUBLIC_IP}";
+
+      echo "Gathering outputs to deployment output directory...";
+      scp-to-deployment-outputs-dir "~/personal-network-client.ovpn";
   fi
 
   #run-script-from-admin-home clean-up.sh;
 
   echo "Server public IP: $PUBLIC_IP";
   echo "Deployment name: $DEPLOYMENT_NAME";
+  echo "Deployment outputs directory: $DEPLOYMENT_OUTPUTS_DIR";
   echo;
 
   echo "---";

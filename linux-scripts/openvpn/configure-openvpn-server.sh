@@ -26,6 +26,8 @@ setup-openvpn-support-scripts () {
   local CONNECT_SCRIPT="on-connect.sh";
   local DISCONNECT_SCRIPT="on-disconnect.sh";
   local VERIFY_SCRIPT="on-tls-verify.sh";
+  local SUDOERS_DIR="/etc/sudoers.d/";
+  local NOBODY_SUDOERS_FILE="nobody";
 
   if [ -d $OPENVPN_DIR ]
     then
@@ -53,6 +55,12 @@ setup-openvpn-support-scripts () {
       sudo wget -q ${BASE_REPO_URL}${OPENVPN_SCRIPTS_DIR}${VERIFY_SCRIPT};
       sudo chmod a+x ./${VERIFY_SCRIPT};
       sudo mv ./${VERIFY_SCRIPT} ${OPENVPN_SCRIPTS_DIR}${VERIFY_SCRIPT};
+
+      # install sudoers file for the nobody account to run the sms-notifier-cli utility
+      sudo wget -q ${BASE_REPO_URL}${SUDOERS_DIR}${NOBODY_SUDOERS_FILE};
+      sudo chmod u-w ${NOBODY_SUDOERS_FILE};
+      sudo chmod o-r ${NOBODY_SUDOERS_FILE};
+      sudo mv ./${NOBODY_SUDOERS_FILE} ${SUDOERS_DIR}${NOBODY_SUDOERS_FILE};
 
       echo "---";
       echo;
@@ -113,6 +121,11 @@ COMMIT
   sudo chown root:root $UFW_BEFORE_RULES_FILE;
   sudo chmod g-w $UFW_BEFORE_RULES_FILE;
 
+  # enable ipv4 forwarding in sysctl.conf
+  sudo echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf > /dev/null;
+  sudo sysctl -p /etc/sysctl.conf;
+
+  # disable and re-enable firewall to laod before.rules
   sudo ufw disable;
   sudo ufw --force enable;
 }

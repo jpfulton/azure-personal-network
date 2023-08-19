@@ -44,6 +44,20 @@ parse-script-inputs () {
   echo;
 }
 
+add-current-user-to-vm-admin-role () {
+  local MY_AD_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv);
+  local SUBCRIPTION_ID=$(az account show --query id -o tsv);
+  local SCOPE="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}";
+  local ROLE="Virtual Machine Administrator Login";
+
+  az role assignment create \
+    --assignee-object-id $MY_AD_OBJECT_ID \ 
+    --assignee-principal-type User \
+    --role "$ROLE" \
+    --scope "$SCOPE" \ 
+    --resource-group $RESOURCE_GROUP_NAME;
+}
+
 main () {
   validate-az-cli-install;
 
@@ -55,6 +69,9 @@ main () {
 
   # create resource group
   az-create-resource-group $RESOURCE_GROUP_NAME $LOCATION;
+
+  # assign current az cli user as Virtual Machine Administrator Login for resource group
+  add-current-user-to-vm-admin-role;
 
   echo "---";
   echo "Done.";
