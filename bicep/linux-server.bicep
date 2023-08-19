@@ -38,12 +38,20 @@ param adminUsername string = 'jpfulton'
 @description('Public key data for the admin user.')
 param adminPublicKeyData string
 
+@description('Create allow SSH inbound NSG rule.')
+param allowSsh bool = false
+
+@description('Create an inbound allow OpenVPN rule.')
+param allowOpenVpn bool = false
+
 module nicModule 'modules/nic.bicep' = {
   name: 'nic-deploy'
   params: {
     location: location
     serverName: serverName
     vnetName: vnetName
+    allowSsh: allowSsh
+    allowOpenVpn: allowOpenVpn
   }
 }
 
@@ -59,3 +67,6 @@ module vmModule 'modules/linux-server/vm.bicep' = {
     isSpot: isSpot
   }
 }
+
+@description('Public IP of the server.')
+output publicIp string = nicModule.outputs.publicIp

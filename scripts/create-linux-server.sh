@@ -12,6 +12,8 @@ print-usage () {
   echo "Usage: ${0} [options] [resource-group] [server-name]";
   echo;
   echo "Options:";
+  echo "  -o,--openvpn:     Enable OpenVPN Server installation.";
+  echo "  -s,--allow-ssh:   Enable installation over SSH on public IP.";
   echo "---";
   echo;
 }
@@ -27,7 +29,7 @@ parse-script-inputs () {
   fi
 
   SCRIPT_NAME=$(basename "$0");
-  OPTIONS=$(getopt --options o --long openvpn --name "$SCRIPT_NAME" -- "$@");
+  OPTIONS=$(getopt --options os --long allow-ssh,openvpn --name "$SCRIPT_NAME" -- "$@");
   if [ $? -ne 0 ]
     then
       echo "Incorrect options.";
@@ -35,6 +37,7 @@ parse-script-inputs () {
       exit 1;
   fi
 
+  ALLOW_SSH_RULE=0;
   OPENVPN=0;
 
   eval set -- "$OPTIONS";
@@ -44,12 +47,19 @@ parse-script-inputs () {
     case "$1" in
       -o|--openvpn)
         OPENVPN=1; shift ;;
+      -s|--allow-ssh)
+        ALLOW_SSH_RULE=1; shift ;;
       --) 
         shift; ;;
       *) 
         break ;;
     esac
   done
+
+  if [ "$ALLOW_SSH_RULE" -eq 1 ]
+    then
+      echo "Enabling inbound SSH NSG rule.";
+  fi
 
   if [ "$OPENVPN" -eq 1 ]
     then
@@ -75,8 +85,17 @@ parse-script-inputs () {
 }
 
 get-user-inputs () {
-  read -p "Enter a private DNS zone name [private.jpatrickfulton.com]: " PRIVATE_DNS_ZONE;
-  PRIVATE_DNS_ZONE=${PRIVATE_DNS_ZONE:-private.jpatrickfulton.com};
+  if [ "$ALLOW_SSH_RULE" -eq 0 ]
+    then
+      # we only need this prompt if public SSH access is not enabled during install
+      read -p "Enter a private DNS zone name [private.jpatrickfulton.com]: " PRIVATE_DNS_ZONE;
+      PRIVATE_DNS_ZONE=${PRIVATE_DNS_ZONE:-private.jpatrickfulton.com};
+
+      SERVER_FQDN="${SERVER_NAME}.${PRIVATE_DNS_ZONE}";
+    else
+      # this variable will be reset after the deployment
+      SERVER_FQDN="Public IP will be used after deployment.";
+  fi
 
   read -p "Enter a vm size [Standard_DS1_v2]: " VM_SIZE;
   VM_SIZE=${VM_SIZE:-Standard_DS1_v2};
@@ -102,6 +121,15 @@ get-user-inputs () {
       fi
   fi
 
+  if [ "$OPENVPN" -eq 1 ]
+    then
+      read -p "Enter the virtual network address space [10.1.0.0]: " VNET_ADDRESS_SPACE;
+      VNET_ADDRESS_SPACE=${VNET_ADDRESS_SPACE:-"10.1.0.0"};
+
+      read -p "Enter a subnet for VPN clients [10.1.10.0]: " VPN_SUBNET;
+      VPN_SUBNET=${VPN_SUBNET:-"10.1.10.0"};
+  fi
+
   read -p "Enter an admin account username [jpfulton]: " ADMIN_USERNAME;
   ADMIN_USERNAME=${ADMIN_USERNAME:-jpfulton};
 
@@ -122,8 +150,6 @@ get-user-inputs () {
       echo "Cannot find admin private key file. Exiting...";
       exit 1;
   fi
-
-  SERVER_FQDN="${SERVER_NAME}.${PRIVATE_DNS_ZONE}";
 
   echo;
   echo;
@@ -151,9 +177,23 @@ deploy () {
   export ADMIN_USERNAME="$ADMIN_USERNAME";
   export ADMIN_PUBLIC_KEY="$(cat $ADMIN_PUBLIC_KEY_FILE)";
 
+  if [ "$ALLOW_SSH_RULE" -eq 1 ]
+    then
+      export ALLOW_SSH="true";
+  fi
+
+  if [ "$OPENVPN" -eq 1 ]
+    then
+      export ALLOW_OPENVPN="true";
+  fi
+
   local TEMPLATE_FILE="${CURRENT_SCRIPT_DIR}../bicep/linux-server.bicep";
   local PARAM_FILE="${CURRENT_SCRIPT_DIR}../bicep/linux-server.bicepparam";
+
+  DEPLOYMENT_NAME=$(uuidgen);
+
   az deployment group create \
+    --name $DEPLOYMENT_NAME \
     --resource-group $RESOURCE_GROUP \
     --template-file $TEMPLATE_FILE \
     --parameters $PARAM_FILE;
@@ -162,6 +202,22 @@ deploy () {
     then
       echo "Deployment failed. Exiting.";
       exit 1;
+  fi
+
+  PUBLIC_IP=$(az deployment group show \
+    -g $RESOURCE_GROUP \
+    -n $DEPLOYMENT_NAME \
+    --query properties.outputs.publicIp.value -o tsv);
+
+  echo "Public IP is: $PUBLIC_IP";
+  echo;
+
+  if [ "$ALLOW_SSH_RULE" -eq 1 ]
+    then
+      echo "Allow public SSH rule was configured. Using public IP for next steps...";
+
+      # Replace SERVER_FQDN with public IP for future steps
+      SERVER_FQDN="$PUBLIC_IP";
   fi
 
   echo "---";
@@ -211,8 +267,8 @@ scp-file-to-admin-home () {
 run-script-from-admin-home () {
   if [ "$#" -ne 1 ]
     then
-      echo "ERROR: exec-script-as-sudo-from-admin-home function requires one argument. Exiting...";
-      echo "INFO:  Required argument one: Path to file to copy.";
+      echo "ERROR: run-script-from-admin-home function requires one argument. Exiting...";
+      echo "INFO:  Required argument one: Script to execute.";
       echo;
 
       exit 1;
@@ -251,6 +307,47 @@ scp-notifier-config () {
   echo;
 }
 
+create-local-deployment-outputs-dir () {
+  DEPLOYMENT_OUTPUTS_DIR=~/deployment-outputs-${DEPLOYMENT_NAME};
+
+  if [ ! -d $DEPLOYMENT_OUTPUTS_DIR ];
+    then
+      mkdir $DEPLOYMENT_OUTPUTS_DIR;
+  fi
+}
+
+scp-to-deployment-outputs-dir () {
+  if [ "$#" -ne 1 ]
+    then
+      echo "ERROR: scp-to-deployment-outputs-dir function requires one argument. Exiting...";
+      echo "INFO:  Required argument one: File to scp to outputs directory.";
+      echo;
+
+      exit 1;
+  fi
+
+  local REMOTE_FILE="$1";
+
+  scp -i $ADMIN_PRIVATE_KEY_FILE \
+        ${ADMIN_USERNAME}@${SERVER_FQDN}:${REMOTE_FILE} \
+        ${DEPLOYMENT_OUTPUTS_DIR}/;
+}
+
+az-remove-allow-ssh-nsg-rule () {
+  echo "Removing NSG Allow SSH rule...";
+
+  local NSG_NAME="${SERVER_NAME}-nsg";
+  local RULE_NAME="AllowSsh";
+
+  az network nsg rule delete \
+    -g $RESOURCE_GROUP \
+    --nsg-name $NSG_NAME \
+    -n $RULE_NAME;
+
+  echo "---";
+  echo;
+}
+
 main () {
   validate-az-cli-install;
 
@@ -263,6 +360,9 @@ main () {
 
   # deploy bicep template
   deploy;
+
+  # create outputs directory
+  create-local-deployment-outputs-dir;
 
   # log into admin account and record host key
   login-to-admin-acct;
@@ -283,12 +383,12 @@ main () {
   run-script-from-admin-home setup-firewall.sh;
   run-script-from-admin-home setup-motd.sh;
   run-script-from-admin-home setup-node-and-yarn.sh;
+  run-script-from-admin-home setup-sms-notifier.sh;
+  scp-notifier-config;
   
   if [ "$IS_SPOT" = "true" ]
     then
       echo "Executing spot instance setup scripts...";
-      run-script-from-admin-home setup-sms-notifier.sh;
-      scp-notifier-config;
       run-script-from-admin-home setup-eviction-shutdown-system.sh;
 
       if [ "$SPOT_RESTART" = "true" ]
@@ -300,7 +400,41 @@ main () {
       fi
   fi
 
+  if [ "$OPENVPN" -eq 1 ]
+    then
+      echo "Copying OpenVPN setup scripts to server...";
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/install-openvpn-and-deps.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/create-server-certificates.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/configure-openvpn-server.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/create-client-config.sh;
+
+      echo "Executing OpenVPN setup scripts...";
+      run-script-from-admin-home install-openvpn-and-deps.sh;
+      run-script-from-admin-home create-server-certificates.sh;
+      run-script-from-admin-home "configure-openvpn-server.sh ${VNET_ADDRESS_SPACE} ${VPN_SUBNET} ${PUBLIC_IP}";
+      run-script-from-admin-home "create-client-config.sh personal-network-client ${PUBLIC_IP}";
+
+      echo "Gathering outputs to deployment output directory...";
+      scp-to-deployment-outputs-dir "~/personal-network-client.ovpn";
+  fi
+
   run-script-from-admin-home clean-up.sh;
+
+  if [ "$OPENVPN" -eq 1 ] && [ "$ALLOW_SSH_RULE" -eq 1 ];
+    then
+      echo "OpenVPN was sucessfully installed over the open SSH port.";
+      echo "Closing SSH port in the server NSG. Future access should be performed over the VPN tunnel.";
+      
+      az-remove-allow-ssh-nsg-rule;
+  fi
+
+  echo;
+  echo "---";
+  echo "Server public IP: $PUBLIC_IP";
+  echo "Deployment name: $DEPLOYMENT_NAME";
+  echo "Deployment outputs directory: $DEPLOYMENT_OUTPUTS_DIR";
+  echo "---";
+  echo;
 
   echo "---";
   echo "Done.";
