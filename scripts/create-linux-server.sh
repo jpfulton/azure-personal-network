@@ -403,11 +403,14 @@ main () {
       scp-to-deployment-outputs-dir "~/personal-network-client.ovpn";
   fi
 
-  #run-script-from-admin-home clean-up.sh;
+  run-script-from-admin-home clean-up.sh;
 
+  echo;
+  echo "---";
   echo "Server public IP: $PUBLIC_IP";
   echo "Deployment name: $DEPLOYMENT_NAME";
   echo "Deployment outputs directory: $DEPLOYMENT_OUTPUTS_DIR";
+  echo "---";
   echo;
 
   echo "---";
