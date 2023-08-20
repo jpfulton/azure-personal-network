@@ -10,7 +10,7 @@ $retryCount = 0
 
 Write-Host "Establishing remote session..."
 $session = New-PSSession -UserName $username -HostName $hostname
-while (!$session -and ($retryCount -le 5)) {
+while (!$session -and ($retryCount -le 18)) {
   $retryCount += 1
 
   Write-Host "On retry number ($retryCount). Retrying session creation in 10 seconds..."
