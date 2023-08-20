@@ -22,13 +22,6 @@ $ProgressPreference = 'SilentlyContinue'
 
 Import-Module Appx -UseWindowsPowerShell
 
-# Remove Store Version of WSL (doesn't work in remote PS sessions)
-Write-Host "Removing store version WSL..."
-$package = Get-AppxPackage -name "*WindowsSubsystemForLinux*"
-if ($package) {
-  Remove-AppxPackage -package $package
-}
-
 # Update WSL Kernel (avoid store)
 Write-Host "Install WSL kernel version from MSI..."
 Invoke-WebRequest -Uri https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi -OutFile ~/wsl_update_x64.msi -UseBasicParsing
@@ -54,12 +47,30 @@ ubuntu install --root
 $username = "ubuntu"
 $password = "ubuntu"
 
+# apt-get install -y isn't enough to be truly noninteractive
+$env:DEBIAN_FRONTEND = "noninteractive"
+$env:WSLENV += ":DEBIAN_FRONTEND"
+
+# update Ubuntu base packages
+Write-Host "Updating distribution packages..."
+ubuntu run apt-get update
+ubuntu run apt-get full-upgrade -y
+
+# Enable systemd in /etc/wsl.conf
+Write-Host "Enabling systemd in Ubuntu on WSL host..."
+ubuntu run "echo ""[boot]"" > /etc/wsl.conf"
+ubuntu run "echo ""systemd=true"" >> /etc/wsl.conf"
+
 # create user account
 Write-Host "Creating default user account..."
-wsl -u root useradd -m "$username"
-wsl -u root sh -c "echo `"${username}:${password}`" | chpasswd" # wrapped in sh -c to get the pipe to work
-wsl -u root chsh -s /bin/bash "$username"
-wsl -u root usermod -aG adm,cdrom,sudo,dip,plugdev "$username"
+ubuntu run useradd -m "$username"
+ubuntu run "echo ""${username}:${password}""  | chpasswd"
+ubuntu run chsh -s /bin/bash "$username"
+ubuntu run usermod -aG adm,cdrom,sudo,dip,plugdev "$username"
 
 Write-Host "Setting default user account..."
 ubuntu config --default-user "$username"
+
+# Update WSL from web download to support systemd
+Write-Host "Updating WSL from web download..."
+wsl --update --web-download

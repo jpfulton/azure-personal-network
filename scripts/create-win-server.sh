@@ -227,8 +227,8 @@ run-ps-copy-local-public-key () {
 run-ps-install-vmp () {
   echo "Enabling Virtual Machine Platfrom OS Feature...";
 
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../windows/azure/enable-virtual-machine-platform.ps1";
-  run-azure-ps $RESOURCE_GROUP $SERVER_NAME $PS_FILE;
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../windows/admin/wsl/enable-virtual-machine-platform.ps1";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
 run-ps-install-wsl () {
@@ -375,9 +375,16 @@ run-ps-config-and-run-windows-update () {
 restart-vm () {
   echo "Restarting VM to allow settings to take effect...";
 
+  # az vm restart can hang, using the --no-wait flag causes the az cli to return
+  # without waiting for the long running operaton, the following sleep command
+  # gives time for the vm to restart, scripts followiing this step should use
+  # a retry loop when connecting to vm in case it is still in boot mode
   az vm restart \
+    --no-wait \
     -g $RESOURCE_GROUP \
     -n $SERVER_NAME;
+
+  sleep 180; # set based on average restart time on a 2 CPU instance
 
   echo "---";
   echo;
@@ -434,13 +441,13 @@ main () {
 
   if [ "$NO_WSL" -eq 0 ]
     then
-      run-ps-install-vmp;
-      restart-vm;
+      #run-ps-install-vmp;
+      #restart-vm;
       run-ps-install-wsl;
       restart-vm;
       run-ps-config-wsl;
-      run-ps-update-wsl-distro;
-      run-ps-enable-systemd-wsl;
+      #run-ps-update-wsl-distro;
+      #run-ps-enable-systemd-wsl;
   fi
 
   if [ "$NO_DEV_TOOLS" -eq 0 ]
@@ -451,6 +458,7 @@ main () {
       run-ps-install-native-build-libs;
       run-ps-install-vscode;
       run-ps-install-chrome;
+      restart-vm;
 
       if [ "$PERSONAL_REPOS" -eq 1 ]
         then
