@@ -94,4 +94,4 @@ function Install-VSCode {
   }
 }
 
-Install-VSCode -AdditionalExtensions "ms-vscode-remote.remote-wsl"
+Install-VSCode
