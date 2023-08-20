@@ -368,14 +368,14 @@ main () {
   login-to-admin-acct;
 
   # copy setup scripts to server
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/core/update-base-packages.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/core/setup-firewall.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/core/setup-motd.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/core/setup-node-and-yarn.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/spot/setup-sms-notifier.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/spot/setup-eviction-shutdown-system.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/spot/update-notifier-config.sh;
-  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/core/clean-up.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/core/update-base-packages.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/core/setup-firewall.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/core/setup-motd.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/core/setup-node-and-yarn.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/spot/setup-sms-notifier.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/spot/setup-eviction-shutdown-system.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/spot/update-notifier-config.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/core/clean-up.sh;
 
   # execute remote setup scripts
   echo "Executing base platform setup scripts...";
@@ -403,10 +403,10 @@ main () {
   if [ "$OPENVPN" -eq 1 ]
     then
       echo "Copying OpenVPN setup scripts to server...";
-      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/install-openvpn-and-deps.sh;
-      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/create-server-certificates.sh;
-      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/configure-openvpn-server.sh;
-      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux-scripts/openvpn/create-client-config.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/openvpn/install-openvpn-and-deps.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/openvpn/create-server-certificates.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/openvpn/configure-openvpn-server.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/openvpn/create-client-config.sh;
 
       echo "Executing OpenVPN setup scripts...";
       run-script-from-admin-home install-openvpn-and-deps.sh;
