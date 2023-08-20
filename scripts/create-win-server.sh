@@ -19,7 +19,6 @@ print-usage () {
   echo;
   echo "Options:";
   echo "  -n,--no-nla:            Disable NLA disable script.";
-  echo "  -w,--no-wsl:            Disable WSL installation.";
   echo "  -u,--no-windows-update: Disable Windows Update configuration and run.";
   echo "  -d,--no-dev-tools:      Disable development tools installation.";
   echo "  --personal-repos:       Enable checkout of personal repositories.";
@@ -38,7 +37,7 @@ parse-script-inputs () {
   fi
 
   SCRIPT_NAME=$(basename "$0");
-  OPTIONS=$(getopt --options nwud --long no-nla,no-wsl,no-windows-updates,no-dev-tools,personal-repos --name "$SCRIPT_NAME" -- "$@");
+  OPTIONS=$(getopt --options nud --long no-nla,no-windows-updates,no-dev-tools,personal-repos --name "$SCRIPT_NAME" -- "$@");
   if [ $? -ne 0 ]
     then
       echo "Incorrect options.";
@@ -47,7 +46,6 @@ parse-script-inputs () {
   fi
 
   NO_NLA=0;
-  NO_WSL=0;
   NO_WIN_UPDATES=0;
   NO_DEV_TOOLS=0;
   PERSONAL_REPOS=0;
@@ -59,8 +57,6 @@ parse-script-inputs () {
     case "$1" in
       -n|--no-nla)
         NO_NLA=1; shift ;;
-      -w|--no-wsl)
-        NO_WSL=1; shift ;;
       -u|--no-windows-updates)
         NO_WIN_UPDATES=1; shift ;;
       -d|--no-dev-tools)
@@ -77,10 +73,6 @@ parse-script-inputs () {
   if [ "$NO_NLA" -eq 1 ]
     then
       echo "Disabling NLA script.";
-  fi
-  if [ "$NO_WSL" -eq 1 ]
-    then
-      echo "Disabling WSL installation.";
   fi
   if [ "$NO_WIN_UPDATES" -eq 1 ]
     then
@@ -228,34 +220,6 @@ run-ps-install-vmp () {
   echo "Enabling Virtual Machine Platfrom OS Feature...";
 
   local PS_FILE="${CURRENT_SCRIPT_DIR}../windows/admin/wsl/enable-virtual-machine-platform.ps1";
-  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
-}
-
-run-ps-install-wsl () {
-  echo "Installing WSL...";
-
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../windows/admin/wsl/install-wsl.ps1";
-  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
-}
-
-run-ps-config-wsl () {
-  echo "Configuring WSL with Ubuntu 22.04 LTS...";
-
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../windows/admin/wsl/config-wsl.ps1";
-  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
-}
-
-run-ps-update-wsl-distro () {
-  echo "Updating base packages in WSL Ubuntu 22.04 LTS installation...";
-
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../windows/admin/wsl/update-wsl-distro.ps1";
-  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
-}
-
-run-ps-enable-systemd-wsl () {
-  echo "Enabling systemd in WSL Ubuntu 22.04 LTS installation...";
-
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../windows/admin/wsl/enable-wsl-systemd.ps1";
   run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
 }
 
@@ -439,17 +403,6 @@ main () {
       fi
   fi
 
-  if [ "$NO_WSL" -eq 0 ]
-    then
-      #run-ps-install-vmp;
-      #restart-vm;
-      run-ps-install-wsl;
-      restart-vm;
-      run-ps-config-wsl;
-      #run-ps-update-wsl-distro;
-      #run-ps-enable-systemd-wsl;
-  fi
-
   if [ "$NO_DEV_TOOLS" -eq 0 ]
     then
       run-ps-install-dotnet-7-sdk;
@@ -458,7 +411,6 @@ main () {
       run-ps-install-native-build-libs;
       run-ps-install-vscode;
       run-ps-install-chrome;
-      restart-vm;
 
       if [ "$PERSONAL_REPOS" -eq 1 ]
         then
