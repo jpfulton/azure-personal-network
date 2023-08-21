@@ -290,7 +290,7 @@ run-ps-install-spot-eviction-service () {
   echo "Installing Spot Instance Eviction Service...";
 
   local PS_FILE="${CURRENT_SCRIPT_DIR}../windows/admin/spot/install-eviction-query-service.ps1 -adminUsername ${ADMIN_USERNAME}";
-  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE "$PS_FILE" $ADMIN_USERNAME $SERVER_FQDN;
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE "$PS_FILE" $ADMIN_USERNAME $SERVER_FQDN -adminUsername jpfulton;
 }
 
 run-ps-install-dotnet-7-sdk () {
