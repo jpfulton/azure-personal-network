@@ -39,8 +39,9 @@ try {
 
         # Send SMS notification to administrators
         Add-ToLogFile -Content "Sending SMS notifications."
-        $smsJob = Start-Job -ScriptBlock { 
-          $NOTIFIER_CLI="C:\Users\${adminUsername}\AppData\Local\Yarn\bin\sms-notify-cli.cmd"
+        $smsJob = Start-Job -ScriptBlock {
+          $userName = $using:adminUsername
+          $NOTIFIER_CLI="C:\Users\${userName}\AppData\Local\Yarn\bin\sms-notify-cli.cmd"
           $HOSTNAME=$(hostname)
           & $NOTIFIER_CLI eviction $HOSTNAME 
         }
