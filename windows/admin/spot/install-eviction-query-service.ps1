@@ -13,7 +13,7 @@ $SERVICE_ARCHIVE_NAME="binaries-win-x64-${SERVICE_VERSION}.zip"
 $SERVICE_URL="https://github.com/jpfulton/short-interval-scheduler-service/releases/download/${SERVICE_VERSION}/${SERVICE_ARCHIVE_NAME}"
 
 $SCRIPT_NAME="query-for-preempt-event.ps1"
-$SCRIPT_URL="https://raw.githubusercontent.com/jpfulton/azure-personal-network/documentation/windows/local/${SCRIPT_NAME}"
+$SCRIPT_URL="https://raw.githubusercontent.com/jpfulton/azure-personal-network/main/windows/local/${SCRIPT_NAME}"
 
 # Use short path to avoid space parsing issues (e.g. C:\Program~1\)
 $fs = New-Object -ComObject Scripting.FileSystemObject
