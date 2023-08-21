@@ -1,6 +1,11 @@
 # Query for Azure Spot Instance Eviction events.
 # Initiate graceful shutdown if found.
 
+param (
+  [string]
+  $adminUsername
+)
+
 # constants
 $ENDPOINT_IP="169.254.169.254"
 $API_VERSION="2020-07-01"
@@ -34,8 +39,9 @@ try {
 
         # Send SMS notification to administrators
         Add-ToLogFile -Content "Sending SMS notifications."
-        $smsJob = Start-Job -ScriptBlock { 
-          $NOTIFIER_CLI="C:\Users\jpfulton\AppData\Local\Yarn\bin\sms-notify-cli.cmd"
+        $smsJob = Start-Job -ScriptBlock {
+          $userName = $using:adminUsername
+          $NOTIFIER_CLI="C:\Users\${userName}\AppData\Local\Yarn\bin\sms-notify-cli.cmd"
           $HOSTNAME=$(hostname)
           & $NOTIFIER_CLI eviction $HOSTNAME 
         }
@@ -64,6 +70,9 @@ try {
         # Initiate shutdown
         Add-ToLogFile -Content "Background tasks complete. Shutting down..."
         Stop-Computer -Force
+
+        # Sleep to prevent another run, sleep will be interupted by shutdown
+        Start-Sleep -Seconds 30
       }
     }
   }

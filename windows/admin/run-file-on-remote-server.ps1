@@ -3,7 +3,8 @@
 param (
   [string]$username, 
   [string]$hostname, 
-  [string]$remotescript
+  [string]$remotescript,
+  [string]$scriptargs
 )
 
 $retryCount = 0
@@ -13,14 +14,14 @@ $session = New-PSSession -UserName $username -HostName $hostname
 while (!$session -and ($retryCount -le 18)) {
   $retryCount += 1
 
-  Write-Host "On retry number ($retryCount). Retrying session creation in 10 seconds..."
+  Write-Host "On retry number ($retryCount  of 18). Retrying session creation in 10 seconds..."
   Start-Sleep -Seconds 10
   $session = New-PSSession -UserName $username -HostName $hostname
 }
 
 if ($session) { 
   Write-Host "Session established. Executing command..."
-  $output = Invoke-Command -Session $session -FilePath $remotescript
+  $output = Invoke-Command -Session $session -FilePath $remotescript -Args $scriptargs
 }
 else {
   Write-Host "Unable to establish session after retry attempts. Exiting with error code..."

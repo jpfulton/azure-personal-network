@@ -79,13 +79,14 @@ run-local-ps () {
 }
 
 run-ps-as-admin () {
-  if [ "$#" -ne 4 ]
+  if [ "$#" -lt 4 ]
     then
       echo "ERROR: run-ps-as-admin function requires four arguments. Exiting...";
       echo "INFO:  Required argument one: Local remote exection shell Powershell file.";
       echo "INFO:  Required argument two: Powershell file for remote execution.";
       echo "INFO:  Required argument three: Admin username.";
       echo "INFO:  Required argument four: Server host name.";
+      echo "INFO:  Optional argument five: Args to powershell script.";
       echo;
 
       exit 1;
@@ -95,6 +96,8 @@ run-ps-as-admin () {
   local PS_FILE="$2";
   local USERNAME="$3";
   local HOSTNAME="$4";
+  shift 4;
+  local ARGS="$@";
 
   if [ ! -f $LOCAL_SHELL_FILE ]
     then
@@ -104,15 +107,15 @@ run-ps-as-admin () {
       exit 1;
   fi
 
-  if [ ! -f $PS_FILE ]
+  if [ "$PS_FILE" = "" ]
     then
-      echo "ERROR: Remote Powershell script not found. Exiting...";
+      echo "ERROR: Remote Powershell script empty. Exiting...";
       echo;
 
       exit 1;
   fi
 
-  pwsh -File $LOCAL_SHELL_FILE -username $USERNAME -hostname $HOSTNAME -remotescript $PS_FILE;
+  pwsh -File $LOCAL_SHELL_FILE -username $USERNAME -hostname $HOSTNAME -remotescript $PS_FILE -scriptargs "$ARGS";
 
   echo "---";
   echo;

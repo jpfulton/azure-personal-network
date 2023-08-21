@@ -216,13 +216,6 @@ run-ps-copy-local-public-key () {
   export ADMIN_PASSWORD=""; #reset the environment variable after use
 }
 
-run-ps-install-vmp () {
-  echo "Enabling Virtual Machine Platfrom OS Feature...";
-
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../windows/admin/wsl/enable-virtual-machine-platform.ps1";
-  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
-}
-
 run-ps-install-choco () {
   echo "Installing Chocolatey...";
 
@@ -296,8 +289,8 @@ run-ps-install-dotnet-7 () {
 run-ps-install-spot-eviction-service () {
   echo "Installing Spot Instance Eviction Service...";
 
-  local PS_FILE="${CURRENT_SCRIPT_DIR}../windows/admin/spot/install-eviction-query-service.ps1";
-  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE $PS_FILE $ADMIN_USERNAME $SERVER_FQDN;
+  local PS_FILE="${CURRENT_SCRIPT_DIR}../windows/admin/spot/install-eviction-query-service.ps1 -adminUsername ${ADMIN_USERNAME}";
+  run-ps-as-admin $REMOTE_EXECUTION_PS_FILE "$PS_FILE" $ADMIN_USERNAME $SERVER_FQDN -adminUsername $ADMIN_USERNAME;
 }
 
 run-ps-install-dotnet-7-sdk () {
