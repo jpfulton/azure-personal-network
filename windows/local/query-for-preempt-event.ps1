@@ -70,6 +70,9 @@ try {
         # Initiate shutdown
         Add-ToLogFile -Content "Background tasks complete. Shutting down..."
         Stop-Computer -Force
+
+        # Sleep to prevent another run, sleep will be interupted by shutdown
+        Start-Sleep -Seconds 30
       }
     }
   }
