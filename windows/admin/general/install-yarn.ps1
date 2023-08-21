@@ -1,5 +1,5 @@
 # Install Yarn Package Manager
-npm install --global yarn
+choco install -y --no-progress yarn
 
 Write-Host "Yarn installed at version:"
 Write-Host (yarn --version)
