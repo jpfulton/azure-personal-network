@@ -16,7 +16,7 @@ This project has dependencies upon Powershell, the Azure CLI and the sshpass uti
 
 ## Install Rosetta if using Apple Silicon
 
-Several dependencies required by this project are only built with Intel x86
+Several dependencies required by this project are built only with Intel x86
 instruction sets. As a result, if you are using a workstation based on Apple Silicon
 processors, [Rosetta 2](<https://en.wikipedia.org/wiki/Rosetta_(software)>) needs to
 be installed. Use the following command to install the Rosetta binary translator
