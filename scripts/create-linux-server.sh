@@ -432,6 +432,15 @@ main () {
       scp-to-deployment-outputs-dir "~/personal-network-client.ovpn";
   fi
 
+  if [ "$SAMBA" -eq 1 ]
+    then
+      echo "Copying Samba setup scripts to server...";
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/data-disk/format-and-mount-data-disk.sh;
+
+      echo "Executing Samba setup scripts...";
+      run-script-from-admin-home format-and-mount-data-disk.sh;
+  fi
+
   run-script-from-admin-home clean-up.sh;
 
   if [ "$OPENVPN" -eq 1 ] && [ "$ALLOW_SSH_RULE" -eq 1 ];
@@ -445,6 +454,12 @@ main () {
   echo;
   echo "---";
   echo "Server name: $SERVER_NAME";
+
+  if [ "$ALLOW_SSH_RULE" -eq 0 ]
+    then
+      echo "Server private FQDN: $SERVER_FQDN";
+  fi
+
   echo "Server public IP: $PUBLIC_IP";
   echo "Deployment name: $DEPLOYMENT_NAME";
   echo "Deployment outputs directory: $DEPLOYMENT_OUTPUTS_DIR";
