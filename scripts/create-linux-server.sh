@@ -436,9 +436,18 @@ main () {
     then
       echo "Copying Samba setup scripts to server...";
       scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/data-disk/format-and-mount-data-disk.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/samba/install-samba-server.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/samba/create-share-folders.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/samba/create-samba-users.sh;
 
       echo "Executing Samba setup scripts...";
       run-script-from-admin-home format-and-mount-data-disk.sh;
+      run-script-from-admin-home install-samba-server.sh;
+      run-script-from-admin-home create-share-folders.sh;
+      run-script-from-admin-home create-samba-users.sh;
+
+      echo "Gathering outputs to deployment output directory...";
+      scp-to-deployment-outputs-dir "~/samba-users.txt";
   fi
 
   run-script-from-admin-home clean-up.sh;

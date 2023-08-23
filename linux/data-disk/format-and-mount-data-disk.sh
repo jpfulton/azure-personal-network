@@ -18,6 +18,14 @@ echo "uuid=$UUID" | sudo sfdisk $DATA_DISK_DEV;
 # Assign the new partition device to this variable
 PARTITION_DEV="${DATA_DISK_DEV}1";
 
+# Sleep to allow new partition devices to be scanned
+sleep 10;
+while [ ! -e $PARTITION_DEV ];
+  do
+    echo "Partition device not yet initialized. Sleeping...";
+    sleep 10;
+done
+
 # Format the partition with an ext4 filesystem
 sudo mkfs.ext4 $PARTITION_DEV;
 
