@@ -44,6 +44,9 @@ param allowSsh bool = false
 @description('Create an inbound allow OpenVPN rule.')
 param allowOpenVpn bool = false
 
+@description('Create and attach data disk.')
+param addDataDisk bool = false
+
 module nicModule 'modules/nic.bicep' = {
   name: 'nic-deploy'
   params: {
@@ -52,6 +55,17 @@ module nicModule 'modules/nic.bicep' = {
     vnetName: vnetName
     allowSsh: allowSsh
     allowOpenVpn: allowOpenVpn
+  }
+}
+
+var dataDiskName = '${serverName}-data-disk'
+
+module dataDiskModule 'modules/data-disk.bicep' = if (addDataDisk) {
+  name: 'data-disk-deploy'
+  params: {
+    location: location
+    name: dataDiskName
+    diskSize: 512
   }
 }
 
@@ -65,6 +79,7 @@ module vmModule 'modules/linux-server/vm.bicep' = {
     serverName: serverName
     vmSize: vmSize
     isSpot: isSpot
+    dataDiskId: empty(dataDiskModule.outputs.diskId) ? '' : dataDiskModule.outputs.diskId
   }
 }
 

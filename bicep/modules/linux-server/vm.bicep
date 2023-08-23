@@ -42,6 +42,9 @@ param isSpot bool = true
 @description('Public key of the admin user.')
 param adminPublicKeyData string
 
+@description('Resource id of a data disk.')
+param dataDiskId string
+
 // configuration properties required for spot instance creation
 var spotConfig = {
   priority: 'Spot'
@@ -130,13 +133,32 @@ var coreVmProperties = {
   }
 }
 
+var dataDiskProperties = {
+  storageProfile: {
+    dataDisks: [
+      {
+        lun: 0
+        createOption: 'Attach'
+        deleteOption: 'Delete'
+        caching: 'None'
+        managedDisk: {
+          id: dataDiskId
+        }
+      }
+    ]
+  }
+}
+
+var propertiesBeforeDataDisk = isSpot ? union(coreVmProperties, spotConfig) : union(coreVmProperties, standardConfig)
+var propertiesWithOptionalDataDisk = empty(dataDiskId) ? propertiesBeforeDataDisk : union(propertiesBeforeDataDisk, dataDiskProperties)
+
 resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   name: serverName
   location: location
   identity: {
     type: 'SystemAssigned'
   }
-  properties: isSpot ? union(coreVmProperties, spotConfig) : union(coreVmProperties, standardConfig)
+  properties: propertiesWithOptionalDataDisk
 }
 
 resource AADSSHLoginForLinuxExtension 'Microsoft.Compute/virtualMachines/extensions@2023-03-01' = {
