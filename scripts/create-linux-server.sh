@@ -13,6 +13,7 @@ print-usage () {
   echo;
   echo "Options:";
   echo "  -o,--openvpn:     Enable OpenVPN Server installation.";
+  echo "  -b,--samba:       Enable Samba Server installation.";
   echo "  -s,--allow-ssh:   Enable installation over SSH on public IP.";
   echo "---";
   echo;
@@ -29,7 +30,7 @@ parse-script-inputs () {
   fi
 
   SCRIPT_NAME=$(basename "$0");
-  OPTIONS=$(getopt --options os --long allow-ssh,openvpn --name "$SCRIPT_NAME" -- "$@");
+  OPTIONS=$(getopt --options obs --long allow-ssh,samba,openvpn --name "$SCRIPT_NAME" -- "$@");
   if [ $? -ne 0 ]
     then
       echo "Incorrect options.";
@@ -39,6 +40,7 @@ parse-script-inputs () {
 
   ALLOW_SSH_RULE=0;
   OPENVPN=0;
+  SAMBA=0;
 
   eval set -- "$OPTIONS";
   shift 6; # jump past the getopt options in the options string
@@ -47,6 +49,8 @@ parse-script-inputs () {
     case "$1" in
       -o|--openvpn)
         OPENVPN=1; shift ;;
+      -b|--samba)
+        SAMBA=1; shift ;;
       -s|--allow-ssh)
         ALLOW_SSH_RULE=1; shift ;;
       --) 
@@ -58,12 +62,17 @@ parse-script-inputs () {
 
   if [ "$ALLOW_SSH_RULE" -eq 1 ]
     then
-      echo "Enabling inbound SSH NSG rule.";
+      echo "Enabling inbound SSH NSG rule and installation over public IP.";
   fi
 
   if [ "$OPENVPN" -eq 1 ]
     then
       echo "Enabling OpenVPN installation.";
+  fi
+
+  if [ "$SAMBA" -eq 1 ]
+    then
+      echo "Enabling Samba installation.";
   fi
 
   RESOURCE_GROUP="$1";
@@ -185,6 +194,11 @@ deploy () {
   if [ "$OPENVPN" -eq 1 ]
     then
       export ALLOW_OPENVPN="true";
+  fi
+
+  if [ "$SAMBA" -eq 1 ]
+    then
+      export ADD_DATA_DISK="true";
   fi
 
   local TEMPLATE_FILE="${CURRENT_SCRIPT_DIR}../bicep/linux-server.bicep";
@@ -418,6 +432,26 @@ main () {
       scp-to-deployment-outputs-dir "~/personal-network-client.ovpn";
   fi
 
+  if [ "$SAMBA" -eq 1 ]
+    then
+      echo "Copying Samba setup scripts to server...";
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/data-disk/format-and-mount-data-disk.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/samba/install-samba-server.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/samba/create-share-folders.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/samba/create-samba-users.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/samba/configure-and-start-samba.sh;
+
+      echo "Executing Samba setup scripts...";
+      run-script-from-admin-home format-and-mount-data-disk.sh;
+      run-script-from-admin-home install-samba-server.sh;
+      run-script-from-admin-home create-share-folders.sh;
+      run-script-from-admin-home create-samba-users.sh;
+      run-script-from-admin-home configure-and-start-samba.sh;
+
+      echo "Gathering outputs to deployment output directory...";
+      scp-to-deployment-outputs-dir "~/samba-users.txt";
+  fi
+
   run-script-from-admin-home clean-up.sh;
 
   if [ "$OPENVPN" -eq 1 ] && [ "$ALLOW_SSH_RULE" -eq 1 ];
@@ -430,6 +464,13 @@ main () {
 
   echo;
   echo "---";
+  echo "Server name: $SERVER_NAME";
+
+  if [ "$ALLOW_SSH_RULE" -eq 0 ]
+    then
+      echo "Server private FQDN: $SERVER_FQDN";
+  fi
+
   echo "Server public IP: $PUBLIC_IP";
   echo "Deployment name: $DEPLOYMENT_NAME";
   echo "Deployment outputs directory: $DEPLOYMENT_OUTPUTS_DIR";
