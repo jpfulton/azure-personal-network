@@ -94,7 +94,33 @@ a different name than the output folder from the previous step.
 
 ## Connect Time Machine to the Backup Server
 
-Open the deployment folder
-Pull the password for applebackup
-Open Finder > Go to Server... > Enter Private FQDN and copied password
-Open Settings > Time Machine > Add Share > Select AppleBackups share > Start Backup
+Using the Finder, navigate to the new deployment outputs folder and in an editor
+of your choice open the `samba-users.txt`. Copy the randomly generated password
+associated with the `applebackup` account to the clip board.
+
+From the **Finder** > **Go** menu select **Connect to Server...\*** to open a server
+connection dialog. Enter the Samba address of the newly created backup server:
+
+```bash
+smb://backup-server.yourprivatednszonehere.com
+```
+
+Click connect. Enter `applebackup` for the username and paste the password into the
+password field. Select the checkbox to retain this username and password key on your
+key chain. In the next step, select the `applebackups` share as the volume to mount.
+The Finder will open an show the contents of the share. It will be empty if the share
+has not yet been used.
+
+To connect Time Machine to the remote share, open the **System Settings** application.
+Select **General** > **Time Machine**. Click the **Plus** button to add a backup target.
+Choose the `applebackups` share from the next dialog and click **Set Up Disk**.
+
+In the next dialog, ensure that you elect to encrypt your backup files with a password.
+Enter a password for the backup of your choosing and confirm it prior to moving to the
+next step. You will need this password in the future should you need to use these backup
+files from another workstation in a recovery operation. Memorize it and store it in a safe
+place. It is not added to the key chain.
+
+Once the disk has been set up, the backup will begin in 60 seconds. The first backup operation
+is complete and may take some time. Future backup operations are incremental and significantly
+faster.
