@@ -1,10 +1,10 @@
 # Setup a Basic Personal Network
 
-Follow the prerequisite steps and installations from the main repository
+Follow the prerequisite steps and installation instructions from the main repository
 [README](./README.md).
 
-From the root of this repository navigate to the control scripts folder with
-the command:
+From the root of this repository navigate to the control scripts folder in
+a terminal with the command:
 
 ```bash
 cd scripts
