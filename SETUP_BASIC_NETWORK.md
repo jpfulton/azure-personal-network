@@ -74,6 +74,20 @@ Only proceed to the next step if name resolution for the private dns zone is wor
 
 ## Create a Samba Backup Server
 
+Next, create a Linux virtual machine running Samba server with a configuration that
+supports macOS Time Machine backups. This configuration will take place across the
+the VPN tunnel with the following command. A data disk to store the backup data will
+be created, formatted and mounted into the Linux file system in this step.
+
+Note that this data disk will be configured for deletion with the virtual machine be default
+should you run the `/delete-vm.sh` script against the virtual machine. You may wish
+to take a snapshot of the data disk prior to deleting the virtual machine should
+you wish to retain and data stored there prior to removing the virtual machine.
+
+Randomly generated passwords for Samba share access will be securely transferred to a new deployment outputs folder in your home directory at the end of the process. The final outputs of the script
+will show the name of the deployment outputs folder from this step. Note that it will have
+a different name than the output folder from the previous step.
+
 ```bash
 ./create-linux-server.sh -b personal-network backup-server
 ```
