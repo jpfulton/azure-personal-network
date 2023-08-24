@@ -79,7 +79,7 @@ module vmModule 'modules/linux-server/vm.bicep' = {
     serverName: serverName
     vmSize: vmSize
     isSpot: isSpot
-    dataDiskId: empty(dataDiskModule.outputs.diskId) ? '' : dataDiskModule.outputs.diskId
+    dataDiskId: empty(dataDiskModule) ? '' : dataDiskModule.outputs.diskId
   }
 }
 
