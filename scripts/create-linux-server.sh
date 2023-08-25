@@ -30,7 +30,7 @@ parse-script-inputs () {
   fi
 
   SCRIPT_NAME=$(basename "$0");
-  OPTIONS=$(getopt --options obs --long allow-ssh,samba,openvpn --name "$SCRIPT_NAME" -- "$@");
+  OPTIONS=$(getopt --options dobs --long dev-tools,allow-ssh,samba,openvpn --name "$SCRIPT_NAME" -- "$@");
   if [ $? -ne 0 ]
     then
       echo "Incorrect options.";
@@ -41,6 +41,7 @@ parse-script-inputs () {
   ALLOW_SSH_RULE=0;
   OPENVPN=0;
   SAMBA=0;
+  DEV_TOOLS=0;
 
   eval set -- "$OPTIONS";
   shift 6; # jump past the getopt options in the options string
@@ -49,6 +50,8 @@ parse-script-inputs () {
     case "$1" in
       -o|--openvpn)
         OPENVPN=1; shift ;;
+      -d|--dev-tools)
+        DEV_TOOLS=1; shift ;;
       -b|--samba)
         SAMBA=1; shift ;;
       -s|--allow-ssh)
@@ -73,6 +76,11 @@ parse-script-inputs () {
   if [ "$SAMBA" -eq 1 ]
     then
       echo "Enabling Samba installation.";
+  fi
+
+  if [ "$DEV_TOOLS" -eq 1 ]
+    then
+      echo "Enabling development tools installation.";
   fi
 
   RESOURCE_GROUP="$1";
@@ -450,6 +458,24 @@ main () {
 
       echo "Gathering outputs to deployment output directory...";
       scp-to-deployment-outputs-dir "~/samba-users.txt";
+  fi
+
+  if [ "$DEV_TOOLS" -eq 1 ]
+    then
+      echo "Copying development tools setup scripts to server...";
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/install-desktop.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/create-dev-user.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/install-vscode.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/install-chrome.sh;
+
+      echo "Executing development tools setup scripts...";
+      run-script-from-admin-home install-desktop.sh;
+      run-script-from-admin-home "create-dev-user.sh ${ADMIN_USERNAME}";
+      run-script-from-admin-home install-vscode.sh;
+      run-script-from-admin-home install-chrome.sh;
+
+      echo "Gathering outputs to deployment output directory...";
+      scp-to-deployment-outputs-dir "~/dev-users.txt";
   fi
 
   run-script-from-admin-home clean-up.sh;
