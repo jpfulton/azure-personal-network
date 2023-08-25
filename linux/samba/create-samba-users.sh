@@ -19,7 +19,7 @@ sudo adduser --no-create-home --disabled-password --shell /sbin/nologin --gecos 
 sudo echo "${LINUX_BACKUP_USER}:$(openssl rand -base64 12)" | sudo chpasswd;
 
 # Set the linux back up user smb password
-(echo "$LINUX_BACKUP_USER_PASS"; echo "$LINUX_BACKUP_USER_PASS") |sudo smbpasswd -s -a $LINUX_BACKUP_USER;
+(echo "$LINUX_BACKUP_USER_PASS"; echo "$LINUX_BACKUP_USER_PASS") | sudo smbpasswd -s -a $LINUX_BACKUP_USER;
 
 # Create a deployment output file with smb users and password for secure transfer to
 # the control workstation later
