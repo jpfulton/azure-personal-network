@@ -465,12 +465,14 @@ main () {
       echo "Copying development tools setup scripts to server...";
       scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/install-desktop.sh;
       scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/create-dev-user.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/install-dotnet-sdk.sh;
       scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/install-vscode.sh;
       scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/install-chrome.sh;
 
       echo "Executing development tools setup scripts...";
       run-script-from-admin-home install-desktop.sh;
       run-script-from-admin-home "create-dev-user.sh ${ADMIN_USERNAME}";
+      run-script-from-admin-home install-dotnet-sdk.sh;
       run-script-from-admin-home install-vscode.sh;
       run-script-from-admin-home install-chrome.sh;
 
