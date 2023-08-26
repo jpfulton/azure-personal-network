@@ -484,6 +484,37 @@ close-ssh-nsg-rule-if-needed () {
   fi
 }
 
+remove-empty-deployment-outputs-dir () {
+  local IS_EMPTY=$(find $DEPLOYMENT_OUTPUTS_DIR -maxdepth 0 -empty -exec echo 1 \;);
+
+  if [ "$IS_EMPTY" -eq 1 ]
+    then
+      echo "Deployment outputs directory is empty. Removing it...";
+      rm -rf $DEPLOYMENT_OUTPUTS_DIR;
+  fi
+}
+
+display-end-of-run-outputs () {
+  echo;
+  echo "---";
+  echo "Server name: $SERVER_NAME";
+
+  if [ "$ALLOW_SSH_RULE" -eq 0 ]
+    then
+      echo "Server private FQDN: $SERVER_FQDN";
+  fi
+
+  echo "Server public IP: $PUBLIC_IP";
+  echo "Deployment name: $DEPLOYMENT_NAME";
+
+  if [ -d "$DEPLOYMENT_OUTPUTS_DIR" ]
+    then
+      echo "Deployment outputs directory: $DEPLOYMENT_OUTPUTS_DIR";
+  fi
+
+  echo;
+}
+
 main () {
   validate-az-cli-install;
 
@@ -516,20 +547,11 @@ main () {
   # remove the allow SSH rule if needed (OpenVPN and AllowSsh were both true)
   close-ssh-nsg-rule-if-needed;
 
-  echo;
-  echo "---";
-  echo "Server name: $SERVER_NAME";
+  # remove deployment outputs directory if empty
+  remove-empty-deployment-outputs-dir;
 
-  if [ "$ALLOW_SSH_RULE" -eq 0 ]
-    then
-      echo "Server private FQDN: $SERVER_FQDN";
-  fi
-
-  echo "Server public IP: $PUBLIC_IP";
-  echo "Deployment name: $DEPLOYMENT_NAME";
-  echo "Deployment outputs directory: $DEPLOYMENT_OUTPUTS_DIR";
-  echo "---";
-  echo;
+  # display deployment results to user
+  display-end-of-run-outputs;
 
   echo "---";
   echo "Done.";
