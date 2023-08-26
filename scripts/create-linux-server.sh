@@ -370,26 +370,9 @@ az-remove-allow-ssh-nsg-rule () {
   echo;
 }
 
-main () {
-  validate-az-cli-install;
-
-  # parse script inputs and gather user inputs
-  parse-script-inputs $@;
-  get-user-inputs;
-
-  # check for signed in Azure CLI user
-  check-signed-in-user;
-
-  # deploy bicep template
-  deploy;
-
-  # create outputs directory
-  create-local-deployment-outputs-dir;
-
-  # log into admin account and record host key
-  login-to-admin-acct;
-
+perform-core-setup () {
   # copy setup scripts to server
+  echo "Copying base platform setup scripts...";
   scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/core/update-base-packages.sh;
   scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/core/setup-firewall.sh;
   scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/core/setup-motd.sh;
@@ -407,7 +390,9 @@ main () {
   run-script-from-admin-home setup-node-and-yarn.sh;
   run-script-from-admin-home setup-sms-notifier.sh;
   scp-notifier-config;
-  
+}
+
+perform-spot-setup () {
   if [ "$IS_SPOT" = "true" ]
     then
       echo "Executing spot instance setup scripts...";
@@ -421,7 +406,9 @@ main () {
           az-add-tag-to-resource $VM_ID "AttemptRestartAfterEviction=true";
       fi
   fi
+}
 
+perform-openvpn-setup () {
   if [ "$OPENVPN" -eq 1 ]
     then
       echo "Copying OpenVPN setup scripts to server...";
@@ -439,7 +426,9 @@ main () {
       echo "Gathering outputs to deployment output directory...";
       scp-to-deployment-outputs-dir "~/personal-network-client.ovpn";
   fi
+}
 
+perform-samba-setup () {
   if [ "$SAMBA" -eq 1 ]
     then
       echo "Copying Samba setup scripts to server...";
@@ -459,7 +448,9 @@ main () {
       echo "Gathering outputs to deployment output directory...";
       scp-to-deployment-outputs-dir "~/samba-users.txt";
   fi
+}
 
+perform-dev-tools-setup () {
   if [ "$DEV_TOOLS" -eq 1 ]
     then
       echo "Copying development tools setup scripts to server...";
@@ -481,6 +472,33 @@ main () {
       echo "Gathering outputs to deployment output directory...";
       scp-to-deployment-outputs-dir "~/dev-users.txt";
   fi
+}
+
+main () {
+  validate-az-cli-install;
+
+  # parse script inputs and gather user inputs
+  parse-script-inputs $@;
+  get-user-inputs;
+
+  # check for signed in Azure CLI user
+  check-signed-in-user;
+
+  # deploy bicep template
+  deploy;
+
+  # create outputs directory
+  create-local-deployment-outputs-dir;
+
+  # log into admin account and record host key
+  login-to-admin-acct;
+
+  # perform setups for core platform and user elected features
+  perform-core-setup;
+  perform-spot-setup;
+  perform-openvpn-setup;
+  perform-samba-setup;
+  perform-dev-tools-setup;  
 
   run-script-from-admin-home clean-up.sh;
 
