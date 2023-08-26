@@ -19,6 +19,10 @@ DEV_USER_PASS="$(openssl rand -base64 12)"; # generate random password
 sudo adduser --disabled-password --gecos "Development User" $DEV_USER;
 sudo echo "${DEV_USER}:${DEV_USER_PASS}" | sudo chpasswd;
 
+# Add dev user to sudoers
+SUDOERS_FILE="/etc/sudoers.d/${DEV_USER}";
+echo -n "${DEV_USER} ALL=(root) NOPASSWD:ALL" | sudo tee $SUDOERS_FILE > /dev/null;
+
 # Create a deployment output file with dev users and password for secure transfer to
 # the control workstation later
 touch $DEPLOYMENT_OUTPUT_FILE;
