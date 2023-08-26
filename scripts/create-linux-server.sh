@@ -474,6 +474,16 @@ perform-dev-tools-setup () {
   fi
 }
 
+close-ssh-nsg-rule-if-needed () {
+  if [ "$OPENVPN" -eq 1 ] && [ "$ALLOW_SSH_RULE" -eq 1 ];
+    then
+      echo "OpenVPN was sucessfully installed over the open SSH port.";
+      echo "Closing SSH port in the server NSG. Future access should be performed over the VPN tunnel.";
+      
+      az-remove-allow-ssh-nsg-rule;
+  fi
+}
+
 main () {
   validate-az-cli-install;
 
@@ -500,15 +510,11 @@ main () {
   perform-samba-setup;
   perform-dev-tools-setup;  
 
+  # clean up the remote home folder
   run-script-from-admin-home clean-up.sh;
 
-  if [ "$OPENVPN" -eq 1 ] && [ "$ALLOW_SSH_RULE" -eq 1 ];
-    then
-      echo "OpenVPN was sucessfully installed over the open SSH port.";
-      echo "Closing SSH port in the server NSG. Future access should be performed over the VPN tunnel.";
-      
-      az-remove-allow-ssh-nsg-rule;
-  fi
+  # remove the allow SSH rule if needed (OpenVPN and AllowSsh were both true)
+  close-ssh-nsg-rule-if-needed;
 
   echo;
   echo "---";
