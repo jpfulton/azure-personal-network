@@ -485,10 +485,10 @@ close-ssh-nsg-rule-if-needed () {
 }
 
 remove-empty-deployment-outputs-dir () {
-  local IS_EMPTY=$(find $DEPLOYMENT_OUTPUTS_DIR -maxdepth 0 -empty -exec echo 1 \;);
-
-  if [ "$IS_EMPTY" -eq 1 ]
+  if [ "$(ls -A $DEPLOYMENT_OUTPUTS_DIR)" ]
     then
+      echo "Deployments output directory contains files. Leaving in place...";
+    else
       echo "Deployment outputs directory is empty. Removing it...";
       rm -rf $DEPLOYMENT_OUTPUTS_DIR;
   fi
