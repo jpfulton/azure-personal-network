@@ -30,7 +30,7 @@ parse-script-inputs () {
   fi
 
   SCRIPT_NAME=$(basename "$0");
-  OPTIONS=$(getopt --options obs --long allow-ssh,samba,openvpn --name "$SCRIPT_NAME" -- "$@");
+  OPTIONS=$(getopt --options dobs --long dev-tools,allow-ssh,samba,openvpn --name "$SCRIPT_NAME" -- "$@");
   if [ $? -ne 0 ]
     then
       echo "Incorrect options.";
@@ -41,6 +41,7 @@ parse-script-inputs () {
   ALLOW_SSH_RULE=0;
   OPENVPN=0;
   SAMBA=0;
+  DEV_TOOLS=0;
 
   eval set -- "$OPTIONS";
   shift 6; # jump past the getopt options in the options string
@@ -49,6 +50,8 @@ parse-script-inputs () {
     case "$1" in
       -o|--openvpn)
         OPENVPN=1; shift ;;
+      -d|--dev-tools)
+        DEV_TOOLS=1; shift ;;
       -b|--samba)
         SAMBA=1; shift ;;
       -s|--allow-ssh)
@@ -73,6 +76,11 @@ parse-script-inputs () {
   if [ "$SAMBA" -eq 1 ]
     then
       echo "Enabling Samba installation.";
+  fi
+
+  if [ "$DEV_TOOLS" -eq 1 ]
+    then
+      echo "Enabling development tools installation.";
   fi
 
   RESOURCE_GROUP="$1";
@@ -362,26 +370,9 @@ az-remove-allow-ssh-nsg-rule () {
   echo;
 }
 
-main () {
-  validate-az-cli-install;
-
-  # parse script inputs and gather user inputs
-  parse-script-inputs $@;
-  get-user-inputs;
-
-  # check for signed in Azure CLI user
-  check-signed-in-user;
-
-  # deploy bicep template
-  deploy;
-
-  # create outputs directory
-  create-local-deployment-outputs-dir;
-
-  # log into admin account and record host key
-  login-to-admin-acct;
-
+perform-core-setup () {
   # copy setup scripts to server
+  echo "Copying base platform setup scripts...";
   scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/core/update-base-packages.sh;
   scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/core/setup-firewall.sh;
   scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/core/setup-motd.sh;
@@ -399,7 +390,9 @@ main () {
   run-script-from-admin-home setup-node-and-yarn.sh;
   run-script-from-admin-home setup-sms-notifier.sh;
   scp-notifier-config;
-  
+}
+
+perform-spot-setup () {
   if [ "$IS_SPOT" = "true" ]
     then
       echo "Executing spot instance setup scripts...";
@@ -413,7 +406,9 @@ main () {
           az-add-tag-to-resource $VM_ID "AttemptRestartAfterEviction=true";
       fi
   fi
+}
 
+perform-openvpn-setup () {
   if [ "$OPENVPN" -eq 1 ]
     then
       echo "Copying OpenVPN setup scripts to server...";
@@ -431,7 +426,9 @@ main () {
       echo "Gathering outputs to deployment output directory...";
       scp-to-deployment-outputs-dir "~/personal-network-client.ovpn";
   fi
+}
 
+perform-samba-setup () {
   if [ "$SAMBA" -eq 1 ]
     then
       echo "Copying Samba setup scripts to server...";
@@ -451,9 +448,33 @@ main () {
       echo "Gathering outputs to deployment output directory...";
       scp-to-deployment-outputs-dir "~/samba-users.txt";
   fi
+}
 
-  run-script-from-admin-home clean-up.sh;
+perform-dev-tools-setup () {
+  if [ "$DEV_TOOLS" -eq 1 ]
+    then
+      echo "Copying development tools setup scripts to server...";
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/install-dotnet-sdk.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/install-desktop.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/create-dev-user.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/enable-node-corepack.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/install-vscode.sh;
+      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/dev-tools/install-chrome.sh;
 
+      echo "Executing development tools setup scripts...";
+      run-script-from-admin-home install-dotnet-sdk.sh;
+      run-script-from-admin-home install-desktop.sh;
+      run-script-from-admin-home "create-dev-user.sh ${ADMIN_USERNAME}";
+      run-script-from-admin-home enable-node-corepack.sh;
+      run-script-from-admin-home install-vscode.sh;
+      run-script-from-admin-home install-chrome.sh;
+
+      echo "Gathering outputs to deployment output directory...";
+      scp-to-deployment-outputs-dir "~/dev-users.txt";
+  fi
+}
+
+close-ssh-nsg-rule-if-needed () {
   if [ "$OPENVPN" -eq 1 ] && [ "$ALLOW_SSH_RULE" -eq 1 ];
     then
       echo "OpenVPN was sucessfully installed over the open SSH port.";
@@ -461,7 +482,19 @@ main () {
       
       az-remove-allow-ssh-nsg-rule;
   fi
+}
 
+remove-empty-deployment-outputs-dir () {
+  if [ "$(ls -A $DEPLOYMENT_OUTPUTS_DIR)" ]
+    then
+      echo "Deployments output directory contains files. Leaving in place...";
+    else
+      echo "Deployment outputs directory is empty. Removing it...";
+      rm -rf $DEPLOYMENT_OUTPUTS_DIR;
+  fi
+}
+
+display-end-of-run-outputs () {
   echo;
   echo "---";
   echo "Server name: $SERVER_NAME";
@@ -473,9 +506,52 @@ main () {
 
   echo "Server public IP: $PUBLIC_IP";
   echo "Deployment name: $DEPLOYMENT_NAME";
-  echo "Deployment outputs directory: $DEPLOYMENT_OUTPUTS_DIR";
-  echo "---";
+
+  if [ -d "$DEPLOYMENT_OUTPUTS_DIR" ]
+    then
+      echo "Deployment outputs directory: $DEPLOYMENT_OUTPUTS_DIR";
+  fi
+
   echo;
+}
+
+main () {
+  validate-az-cli-install;
+
+  # parse script inputs and gather user inputs
+  parse-script-inputs $@;
+  get-user-inputs;
+
+  # check for signed in Azure CLI user
+  check-signed-in-user;
+
+  # deploy bicep template
+  deploy;
+
+  # create outputs directory
+  create-local-deployment-outputs-dir;
+
+  # log into admin account and record host key
+  login-to-admin-acct;
+
+  # perform setups for core platform and user elected features
+  perform-core-setup;
+  perform-spot-setup;
+  perform-openvpn-setup;
+  perform-samba-setup;
+  perform-dev-tools-setup;  
+
+  # clean up the remote home folder
+  run-script-from-admin-home clean-up.sh;
+
+  # remove the allow SSH rule if needed (OpenVPN and AllowSsh were both true)
+  close-ssh-nsg-rule-if-needed;
+
+  # remove deployment outputs directory if empty
+  remove-empty-deployment-outputs-dir;
+
+  # display deployment results to user
+  display-end-of-run-outputs;
 
   echo "---";
   echo "Done.";
