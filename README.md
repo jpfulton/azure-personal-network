@@ -1,6 +1,7 @@
 # azure-personal-network
 
 ![License](https://img.shields.io/badge/License-MIT-blue)
+![Visitors](https://visitor-badge.laobi.icu/badge?page_id=jpfulton.azure-personal-network)
 
 A collection of
 [Bicep](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview?tabs=bicep)
