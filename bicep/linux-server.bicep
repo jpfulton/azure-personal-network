@@ -47,6 +47,12 @@ param allowOpenVpn bool = false
 @description('Create and attach data disk.')
 param addDataDisk bool = false
 
+@description('Create storage account for backups.')
+param addStorageAccount bool = false
+
+@description('Name of the storage account.')
+param storageAccountName string = ''
+
 module nicModule 'modules/nic.bicep' = {
   name: 'nic-deploy'
   params: {
@@ -66,6 +72,15 @@ module dataDiskModule 'modules/data-disk.bicep' = if (addDataDisk) {
     location: location
     name: dataDiskName
     diskSize: 512
+  }
+}
+
+module storageAccountModule 'modules/storage/backup-storage.bicep' = if (addStorageAccount) {
+  name: 'storage-account-deploy'
+  params: {
+    location: location
+    name: storageAccountName
+    vnetName: vnetName
   }
 }
 
