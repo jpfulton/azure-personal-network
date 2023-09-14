@@ -9,7 +9,7 @@ FUSE_XATTRS_REPO="https://github.com/fbarriga/fuse_xattrs.git";
 
 DEBIAN_FRONTEND="noninteractive";
 sudo -E apt-get update;
-sudo -E agt-get cmake make fuse libfuse-dev;
+sudo -E apt-get install cmake make fuse libfuse-dev;
 
 sudo wget -q ${BASE_REPO_URL}${FUSE_CONFIG_PATH} -O ${FUSE_CONFIG};
 sudo mv ${FUSE_CONFIG} ${FUSE_CONFIG_PATH};
