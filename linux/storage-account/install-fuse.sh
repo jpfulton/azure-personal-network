@@ -17,7 +17,7 @@ sudo mv ${FUSE_CONFIG} ${FUSE_CONFIG_PATH};
 if [ ! -d $REPOS_DIR ];
   then
     mkdir $REPOS_DIR;
-if
+fi
 cd $REPOS_DIR;
 
 git clone $FUSE_XATTRS_REPO;

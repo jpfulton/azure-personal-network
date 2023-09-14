@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [ "$#" -ne 1 ]
+if [ "$#" -ne 2 ]
   then
     echo "ERROR: This script requires two arguments. Exiting...";
     echo "INFO:  Required argument one: Storage account name.";
