@@ -12,9 +12,11 @@ print-usage () {
   echo "Usage: ${0} [options] [resource-group] [server-name]";
   echo;
   echo "Options:";
-  echo "  -o,--openvpn:     Enable OpenVPN Server installation.";
-  echo "  -b,--samba:       Enable Samba Server installation.";
-  echo "  -s,--allow-ssh:   Enable installation over SSH on public IP.";
+  echo "  -o,--openvpn:                 Enable OpenVPN Server installation.";
+  echo "  -b,--samba:                   Enable Samba Server installation with data disk.";
+  echo "  -a,--samba-with-storage-acct: Enable Samba Server with storage account.";
+  echo "  -s,--allow-ssh:               Enable installation over SSH on public IP.";
+  echo "  -d,--dev-tools:               Enable desktop env and developer tools.";
   echo "---";
   echo;
 }
@@ -30,7 +32,7 @@ parse-script-inputs () {
   fi
 
   SCRIPT_NAME=$(basename "$0");
-  OPTIONS=$(getopt --options dobs --long dev-tools,allow-ssh,samba,openvpn --name "$SCRIPT_NAME" -- "$@");
+  OPTIONS=$(getopt --options dobsa --long dev-tools,allow-ssh,samba,samba-with-storage-acct,openvpn --name "$SCRIPT_NAME" -- "$@");
   if [ $? -ne 0 ]
     then
       echo "Incorrect options.";
@@ -41,6 +43,7 @@ parse-script-inputs () {
   ALLOW_SSH_RULE=0;
   OPENVPN=0;
   SAMBA=0;
+  SAMBA_WITH_STORAGE=0;
   DEV_TOOLS=0;
 
   eval set -- "$OPTIONS";
@@ -54,6 +57,8 @@ parse-script-inputs () {
         DEV_TOOLS=1; shift ;;
       -b|--samba)
         SAMBA=1; shift ;;
+      -a|--samba-with-storage-acct)
+        SAMBA_WITH_STORAGE=1; shift ;;
       -s|--allow-ssh)
         ALLOW_SSH_RULE=1; shift ;;
       --) 
@@ -75,7 +80,13 @@ parse-script-inputs () {
 
   if [ "$SAMBA" -eq 1 ]
     then
-      echo "Enabling Samba installation.";
+      echo "Enabling Samba with data disk installation.";
+  fi
+
+  if [ "$SAMBA_WITH_STORAGE" -eq 1 ]
+    then
+      echo "Enabling Samba with storage account installation.";
+      STORAGE_ACCOUNT_NAME="backupstorage$(openssl rand -hex 2)"; # generate random acct name
   fi
 
   if [ "$DEV_TOOLS" -eq 1 ]
@@ -207,6 +218,13 @@ deploy () {
   if [ "$SAMBA" -eq 1 ]
     then
       export ADD_DATA_DISK="true";
+  fi
+
+  if [ "$SAMBA_WITH_STORAGE" -eq 1 ]
+    then
+      export ADD_DATA_DISK="false";
+      export ADD_STORAGE_ACCOUNT="true";
+      export STORAGE_ACCOUNT_NAME="$STORAGE_ACCOUNT_NAME";
   fi
 
   local TEMPLATE_FILE="${CURRENT_SCRIPT_DIR}../bicep/linux-server.bicep";
@@ -428,18 +446,44 @@ perform-openvpn-setup () {
   fi
 }
 
+perform-storage-account-mount () {
+  run-script-from-admin-home install-fuse.sh;
+
+  local STORAGE_ACCOUNT_PASSWORD=$(az storage account keys list \
+    --resource-group $RESOURCE_GROUP \
+    --account-name $STORAGE_ACCOUNT_NAME \
+    --query "[0].value" --output tsv | tr -d '"');
+
+  run-script-from-admin-home "mount-storage-account.sh $STORAGE_ACCOUNT_NAME $STORAGE_ACCOUNT_PASSWORD";
+}
+
 perform-samba-setup () {
-  if [ "$SAMBA" -eq 1 ]
+  if [ "$SAMBA" -eq 1 ] || [ "$SAMBA_WITH_STORAGE" -eq 1 ]
     then
       echo "Copying Samba setup scripts to server...";
-      scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/data-disk/format-and-mount-data-disk.sh;
+
+      if [ "$SAMBA" -eq 1 ]
+        then
+          scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/data-disk/format-and-mount-data-disk.sh;
+        else
+          scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/storage-account/install-fuse.sh;
+          scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/storage-account/mount-storage-account.sh;
+      fi
+
       scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/samba/install-samba-server.sh;
       scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/samba/create-share-folders.sh;
       scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/samba/create-samba-users.sh;
       scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/samba/configure-and-start-samba.sh;
 
       echo "Executing Samba setup scripts...";
-      run-script-from-admin-home format-and-mount-data-disk.sh;
+
+      if [ "$SAMBA" -eq 1 ]
+        then
+          run-script-from-admin-home format-and-mount-data-disk.sh;
+        else
+          perform-storage-account-mount;
+      fi
+
       run-script-from-admin-home install-samba-server.sh;
       run-script-from-admin-home create-share-folders.sh;
       run-script-from-admin-home create-samba-users.sh;
