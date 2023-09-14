@@ -68,13 +68,6 @@ resource fileService 'Microsoft.Storage/storageAccounts/fileServices@2023-01-01'
   parent: storageAccount
   name: 'default'
   properties: {
-    protocolSettings: {
-      smb: {
-      }
-    }
-    cors: {
-      corsRules: []
-    }
     shareDeleteRetentionPolicy: {
       enabled: false
     }
