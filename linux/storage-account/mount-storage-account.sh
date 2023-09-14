@@ -37,5 +37,5 @@ sudo chmod 600 /etc/smbcredentials/${STORAGE_ACCOUNT_NAME}.cred;
 echo "//${STORAGE_ACCOUNT_NAME}.file.core.windows.net/${SHARE_NAME} ${RAW_MOUNT_POINT} cifs nofail,credentials=/etc/smbcredentials/${STORAGE_ACCOUNT_NAME}.cred,dir_mode=0777,file_mode=0777,serverino,nosharesock,actimeo=30" | sudo tee -a /etc/fstab > /dev/null;
 sudo mount -t cifs //${STORAGE_ACCOUNT_NAME}.file.core.windows.net/${SHARE_NAME} ${RAW_MOUNT_POINT} -o credentials=/etc/smbcredentials/${STORAGE_ACCOUNT_NAME}.cred,dir_mode=0777,file_mode=0777,serverino,nosharesock,actimeo=30;
 
-sudo fuse_xattrs -o allow_other $MOUNT_POINT_RAW $MOUNT_POINT;
+sudo fuse_xattrs -o allow_other $RAW_MOUNT_POINT $MOUNT_POINT;
 ## TODO: Update fstab
