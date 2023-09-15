@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DEBIAN_FRONTEND="noninteractive";
+export DEBIAN_FRONTEND="noninteractive";
 BASE_REPO_URL="https://raw.githubusercontent.com/jpfulton/example-linux-configs/main";
 
 # Set up custom MOTD script

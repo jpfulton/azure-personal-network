@@ -7,7 +7,7 @@ FUSE_CONFIG_PATH="/etc/${FUSE_CONFIG}";
 REPOS_DIR="repos";
 FUSE_XATTRS_REPO="https://github.com/fbarriga/fuse_xattrs.git";
 
-DEBIAN_FRONTEND="noninteractive";
+export DEBIAN_FRONTEND="noninteractive";
 sudo -E apt-get update;
 sudo -E apt-get install cmake make fuse libfuse-dev -y;
 

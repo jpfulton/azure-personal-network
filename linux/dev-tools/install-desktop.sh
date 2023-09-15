@@ -4,7 +4,7 @@ BASE_REPO_URL="https://raw.githubusercontent.com/jpfulton/example-linux-configs/
 XRDP_CONFIG_DIR="/etc/xrdp/";
 XRDP_WM_STARTUP_SCRIPT="startwm.sh";
 
-DEBIAN_FRONTEND="noninteractive";
+export DEBIAN_FRONTEND="noninteractive";
 sudo -E apt-get update;
 
 # Install a minimal version of Gnome Desktop

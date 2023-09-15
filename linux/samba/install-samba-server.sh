@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Install the samba package and dependencies
-DEBIAN_FRONTEND="noninteractive";
+export DEBIAN_FRONTEND="noninteractive";
 sudo -E apt-get update;
 sudo -E apt-get install -y samba;
 
