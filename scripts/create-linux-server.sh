@@ -399,6 +399,7 @@ perform-core-setup () {
   scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/spot/setup-eviction-shutdown-system.sh;
   scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/spot/update-notifier-config.sh;
   scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/core/clean-up.sh;
+  scp-file-to-admin-home ${CURRENT_SCRIPT_DIR}../linux/core/restart.sh;
 
   # execute remote setup scripts
   echo "Executing base platform setup scripts...";
@@ -584,6 +585,10 @@ main () {
   perform-openvpn-setup;
   perform-samba-setup;
   perform-dev-tools-setup;  
+
+  # restart server to prove configuration, restart services and run on updated kernel as needed
+  # enqueued for 1 minute after execution to give clean up script time to execute
+  run-script-from-admin-home restart.sh;
 
   # clean up the remote home folder
   run-script-from-admin-home clean-up.sh;
