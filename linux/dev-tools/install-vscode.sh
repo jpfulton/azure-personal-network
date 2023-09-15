@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DEBIAN_FRONTEND="noninteractive";
+export DEBIAN_FRONTEND="noninteractive";
 
 # Install VSCode
 

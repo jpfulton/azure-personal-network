@@ -84,13 +84,23 @@ should you run the `/delete-vm.sh` script against the virtual machine. You may w
 to take a snapshot of the data disk prior to deleting the virtual machine should
 you wish to retain and data stored there prior to removing the virtual machine.
 
-Randomly generated passwords for Samba share access will be securely transferred to a new deployment outputs folder in your home directory at the end of the process. The final outputs of the script
-will show the name of the deployment outputs folder from this step. Note that it will have
-a different name than the output folder from the previous step.
-
 ```bash
 ./create-linux-server.sh -b personal-network backup-server
 ```
+
+Alternatively, you may use the following command to create a backup server backed
+by an Azure storage account for extra capacity and potentially lower hosting costs
+at the expense of storage latency. The storage account will be configured on the
+`Standard_LRS` tier and use cold storage for the file share associated with the
+backup server.
+
+```bash
+./create-linux-server.sh -a personal-network backup-server
+```
+
+Randomly generated passwords for Samba share access will be securely transferred to a new deployment outputs folder in your home directory at the end of the process. The final outputs of the script
+will show the name of the deployment outputs folder from this step. Note that it will have
+a different name than the output folder from the previous step.
 
 ## Connect Time Machine to the Backup Server
 
