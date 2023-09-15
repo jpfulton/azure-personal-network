@@ -587,7 +587,7 @@ main () {
   perform-dev-tools-setup;  
 
   # restart server to prove configuration, restart services and run on updated kernel as needed
-  # enqueued for 1 minute after execution to give clean up script time to execute
+  # enqueue for 1 minute after execution to give clean up script time to execute
   run-script-from-admin-home restart.sh;
 
   # clean up the remote home folder
